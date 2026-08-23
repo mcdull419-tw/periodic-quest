@@ -1,7 +1,7 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-23
-**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 Task 0.1，下一步是 Task 0.2
+**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 Task 0.1、0.2，下一步是 Phase 1（Task 1.1）
 
 ---
 
@@ -57,7 +57,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ### Phase 0：地基
 - [x] 0.1 測試執行器 — Sonnet（`afc8d54..4382c5c`）
-- [ ] 0.2 PWA 外殼與設計 token — Sonnet
+- [x] 0.2 PWA 外殼與設計 token — Sonnet（`37f56d9`）
 
 ### Phase 1：資料
 > **執行順序已調整為 1.1 → 1.3 → 1.2 → 1.4**（見下方裁決 B）
@@ -90,7 +90,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 0.2：PWA 外殼與設計 token**
+**Task 1.1：資料驗證測試**（見裁決 B 的執行順序：1.1 → 1.3 → 1.2 → 1.4）
 
 ## 執行期裁決（計畫的修正，覆寫計畫原文）
 
@@ -112,13 +112,24 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
   `console.log` 寫到 stderr 而非 stdout，原程式碼會讓測試結果訊息完全不顯示。
   已修正並實測六種情境。**計畫文件 Task 0.1 Step 2 的程式碼已過時，
   以 `tests/run.py` 的實際內容為準。**
+- **Task 0.2 裁決**：`js/main.js` 的路由除了 brief 要求的 `#name` 形式，
+  額外支援 `#name?key=value` 查詢參數解析（`navigate(name, params)` /
+  `registerScreen(name, (container, params) => void)`）。這是 Task 3.3
+  教學畫面會需要的能力（例如 `#learn?group=1A`），brief 沒提但先做起來，
+  之後 Task 3.3 不必回頭改路由介面。
 
 ## 已知的待處理小問題
 
 - `tests/run.py` 的 `build_bundle()` 讀不到來源檔時會噴 Python traceback
   而非乾淨錯誤訊息。不影響正確性，留給最終 review 分流。
-- `tests/index.html` 未經真實瀏覽器實測（環境無瀏覽器）。它是人工備援管道，
-  主要驗收管道 `run.py` 已充分實測。待 Task 0.2 起有 http.server 時順帶確認。
+- `tests/index.html` 與 `index.html`（PWA 外殼）都**只驗證到「用
+  `python3 -m http.server` 開，所有檔案都能以正確 HTTP 200／Content-Type
+  回應」**，尚未在真實瀏覽器裡實際渲染過（環境無可操作的瀏覽器——機器上有
+  Safari／Chrome，但 `claude-in-chrome` 擴充功能未連線）。Service Worker
+  的 `activated` 狀態、底部導覽點擊、`tests/index.html` 跑出 PASS/FAIL 綠字，
+  都只是依規格推論應該正確，沒有人眼見過。詳細驗證分級見
+  `.superpowers/sdd/2026-08-23-periodic-quest-core/task-0.2-report.md`。
+  下一次有瀏覽器可用時，應優先補做這兩個檔案的真人驗證。
 
 ---
 
