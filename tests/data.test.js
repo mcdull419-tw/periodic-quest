@@ -100,3 +100,27 @@ test('validateStages 對 stages 陣列內的 null 項目不崩潰，且回報錯
   const errs = validateStages([null], elements);
   ok(errs.length > 0, '應回報 stages 第 0 筆為 null');
 });
+
+test('台灣慣用中文名：矽、砈、鈉、鉀', () => {
+  const byZ = z => ELEMENTS.find(e => e.z === z);
+  eq(byZ(14).zh, '矽');
+  eq(byZ(85).zh, '砈');
+  eq(byZ(11).zh, '鈉');
+  eq(byZ(19).zh, '鉀');
+});
+
+test('共 118 個元素且原子序連續', () => {
+  eq(ELEMENTS.length, 118);
+  for (let i = 0; i < 118; i++) eq(ELEMENTS[i].z, i + 1);
+});
+
+test('鑭系與錒系的 mainGroup 為 null', () => {
+  const la = ELEMENTS.find(e => e.z === 57);
+  eq(la.category, 'lanthanide');
+  eq(la.mainGroup, null);
+});
+
+test('常見過渡金屬的分類正確', () => {
+  const byZ = z => ELEMENTS.find(e => e.z === z);
+  [26, 29, 30, 47, 79, 80].forEach(z => eq(byZ(z).category, 'transition-metal'));
+});

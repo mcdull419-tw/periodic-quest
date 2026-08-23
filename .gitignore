@@ -2,3 +2,4 @@
 reference/*.jpg
 reference/*.pdf
 .superpowers/
+tests/.data.js
