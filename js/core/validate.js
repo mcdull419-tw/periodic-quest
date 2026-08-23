@@ -33,6 +33,7 @@ const MAIN_GROUPS = ['1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A'];
 export function validateElements(elements) {
   const errors = [];
   const seenZ = new Set();
+  const zByZh = new Map();
 
   (elements || []).forEach((el, index) => {
     if (!el || typeof el !== 'object') {
@@ -56,6 +57,14 @@ export function validateElements(elements) {
 
     if (typeof el.zh !== 'string' || el.zh.trim().length === 0) {
       errors.push(`${label}：zh（中文名）不可為空`);
+    } else if (Number.isInteger(el.z)) {
+      // 中文名重複代表資料抄錯（例如兩個原子序被填成同一個字），
+      // 這條檢查不需要知道正確答案就能抓到一整類錯誤。
+      if (zByZh.has(el.zh)) {
+        errors.push(`中文名「${el.zh}」重複：原子序 ${zByZh.get(el.zh)} 與 ${el.z} 使用了同一個字`);
+      } else {
+        zByZh.set(el.zh, el.z);
+      }
     }
 
     if (!Number.isInteger(el.period) || el.period < 1 || el.period > 7) {

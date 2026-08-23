@@ -124,3 +124,53 @@ test('常見過渡金屬的分類正確', () => {
   const byZ = z => ELEMENTS.find(e => e.z === z);
   [26, 29, 30, 47, 79, 80].forEach(z => eq(byZ(z).category, 'transition-metal'));
 });
+
+// 以下三個測試是 Task 1.3 資料修正的核心：原本的抽查測試只涵蓋 4 個
+// 中文名，讓鑭系、錒系共 13 個抄錯的字（例如 65 號被寫成「銥」——那其實
+// 是 77 號 Ir 的字）全部溜過驗收。這裡逐一比對全部 30 個鑭系＋錒系元素，
+// 並加上「中文名不得重複」與「不得與其他原子序的正確字撞名」兩條通用檢查。
+
+test('鑭系 15 個元素的中文名逐一比對', () => {
+  const byZ = z => ELEMENTS.find(e => e.z === z);
+  const expected = {
+    57: '鑭', 58: '鈰', 59: '鐠', 60: '釹', 61: '鉕',
+    62: '釤', 63: '銪', 64: '釓', 65: '鋱', 66: '鏑',
+    67: '鈥', 68: '鉺', 69: '銩', 70: '鐿', 71: '鎦'
+  };
+  Object.entries(expected).forEach(([z, zh]) => {
+    eq(byZ(Number(z)).zh, zh);
+  });
+});
+
+test('錒系 15 個元素的中文名逐一比對', () => {
+  const byZ = z => ELEMENTS.find(e => e.z === z);
+  const expected = {
+    89: '錒', 90: '釷', 91: '鏷', 92: '鈾', 93: '錼',
+    94: '鈽', 95: '鋂', 96: '鋦', 97: '鉳', 98: '鉲',
+    99: '鑀', 100: '鐨', 101: '鍆', 102: '鍩', 103: '鐒'
+  };
+  Object.entries(expected).forEach(([z, zh]) => {
+    eq(byZ(Number(z)).zh, zh);
+  });
+});
+
+test('validateElements 抓出中文名重複（同一個字填給兩個原子序）', () => {
+  const errs = validateElements([
+    { z: 96, symbol: 'Cm', zh: '鎦', period: 7, group: 3, mainGroup: null, category: 'actinide' },
+    { z: 98, symbol: 'Cf', zh: '鎦', period: 7, group: 3, mainGroup: null, category: 'actinide' }
+  ]);
+  ok(errs.some(e => e.indexOf('重複') >= 0 && e.indexOf('96') >= 0 && e.indexOf('98') >= 0),
+    '應回報 z=96 與 z=98 的中文名重複');
+});
+
+test('118 個元素的中文名彼此不重複', () => {
+  const errs = validateElements(ELEMENTS);
+  const dupErrs = errs.filter(e => e.indexOf('重複') >= 0 && e.indexOf('中文名') >= 0);
+  eq(dupErrs, []);
+});
+
+test('中文名不得與其他元素的符號對應錯位：65 號不是「銥」（銥是 77 號 Ir）', () => {
+  const byZ = z => ELEMENTS.find(e => e.z === z);
+  eq(byZ(77).zh, '銥');
+  ok(byZ(65).zh !== '銥', '65 號 Tb 的中文名不該是 77 號 Ir 的「銥」');
+});
