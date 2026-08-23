@@ -57,6 +57,9 @@ export function reviewCard(card, isCorrect, elapsedMs, now) {
   const avgMs = (card.avgMs * n + elapsedMs) / (n + 1);
 
   if (!isCorrect) {
+    // hesitant 重置為 false：這個旗標描述的是「上一次答對時猶不猶豫」，
+    // 答錯代表這張卡整個掉回盒 1 重新開始，舊的猶豫紀錄已經沒有意義，
+    // 不重置的話會讓下一次答對前的 weaknessScore 被過期的猶豫紀錄多算一分。
     return Object.assign({}, card, {
       box: 1,
       nextDue: now,
@@ -92,14 +95,25 @@ export function isDue(card, now) {
   return card.nextDue <= now;
 }
 
+// 判斷是否為可用的 card 物件。null／undefined／非物件一律視為壞資料。
+// store.js 的 migrate 目前不檢查 cards 的型別，竄改過的 localStorage
+// 有機會產出含 null 的卡片集合，這裡先擋下來避免整個複習畫面白屏。
+function isCardLike(c) {
+  return c !== null && typeof c === 'object';
+}
+
 /**
  * 取出所有已到期的卡片，依 nextDue 由早到晚排序。
+ * 陣列內非物件（null／undefined 等）的壞項目會被靜默跳過而不拋例外——
+ * 本函式回傳的是卡片陣列本身（不像 validate* 系列回傳錯誤訊息陣列），
+ * 呼叫端期待拿到的是「可以直接拿去用的卡片」，混進錯誤陣列反而更不合預期，
+ * 所以選擇跳過壞資料而非中止或回報錯誤。
  * @param {object[]} cards card 陣列
  * @param {number} now
  * @returns {object[]} 已到期的 card 陣列
  */
 export function dueCards(cards, now) {
-  return cards.filter(c => isDue(c, now)).sort((a, b) => a.nextDue - b.nextDue);
+  return cards.filter(isCardLike).filter(c => isDue(c, now)).sort((a, b) => a.nextDue - b.nextDue);
 }
 
 /**
@@ -114,10 +128,12 @@ export function weaknessScore(card) {
 
 /**
  * 取出最弱的前 limit 張卡片，依 weaknessScore 由高到低排序。
+ * 陣列內非物件（null／undefined 等）的壞項目會被靜默跳過而不拋例外，
+ * 理由同 dueCards：本函式回傳卡片陣列，靜默跳過壞資料對呼叫端最不意外。
  * @param {object[]} cards card 陣列
  * @param {number} limit
  * @returns {object[]}
  */
 export function weakCards(cards, limit) {
-  return cards.slice().sort((a, b) => weaknessScore(b) - weaknessScore(a)).slice(0, limit);
+  return cards.filter(isCardLike).sort((a, b) => weaknessScore(b) - weaknessScore(a)).slice(0, limit);
 }

@@ -76,3 +76,29 @@ test('weakCards 取出最弱的前 N 張', () => {
                           card({ z: 3, wrong: 3, box: 2 })], 2);
   eq(list.map(c => c.z), [2, 3]);
 });
+
+test('dueCards 遇到 null 項目不崩潰，正常的卡仍被正確處理', () => {
+  const good1 = card({ z: 1, nextDue: 50 });
+  const good2 = card({ z: 2, nextDue: 10 });
+  const list = dueCards([good1, null, good2], 100);
+  eq(list.map(c => c.z), [2, 1]);
+});
+
+test('dueCards 遇到 undefined 項目不崩潰，正常的卡仍被正確處理', () => {
+  const good = card({ z: 1, nextDue: 50 });
+  const list = dueCards([good, undefined], 100);
+  eq(list.map(c => c.z), [1]);
+});
+
+test('weakCards 遇到 null 項目不崩潰，正常的卡仍被正確處理', () => {
+  const good1 = card({ z: 1, wrong: 0, box: 5 });
+  const good2 = card({ z: 2, wrong: 9, box: 1 });
+  const list = weakCards([good1, null, good2], 2);
+  eq(list.map(c => c.z), [2, 1]);
+});
+
+test('weakCards 遇到 undefined 項目不崩潰，正常的卡仍被正確處理', () => {
+  const good = card({ z: 1, wrong: 9, box: 1 });
+  const list = weakCards([good, undefined], 2);
+  eq(list.map(c => c.z), [1]);
+});
