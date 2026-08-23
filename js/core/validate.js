@@ -35,7 +35,12 @@ export function validateElements(elements) {
   const seenZ = new Set();
 
   (elements || []).forEach((el, index) => {
-    const label = `元素 #${index}（z=${el && el.z}）`;
+    if (!el || typeof el !== 'object') {
+      errors.push(`元素 #${index}：資料不可為 null 或 undefined`);
+      return;
+    }
+
+    const label = `元素 #${index}（z=${el.z}）`;
 
     if (!Number.isInteger(el.z) || el.z < 1 || el.z > 118) {
       errors.push(`${label}：z 必須是 1–118 的整數，實際為「${el.z}」`);
@@ -77,9 +82,16 @@ export function validateElements(elements) {
  */
 export function validateGroups(groups, elements) {
   const errors = [];
-  const elementsByZ = new Map((elements || []).map(el => [el.z, el]));
+  const elementsByZ = new Map(
+    (elements || []).filter(el => el && typeof el === 'object').map(el => [el.z, el])
+  );
 
-  (groups || []).forEach(g => {
+  (groups || []).forEach((g, gIndex) => {
+    if (!g || typeof g !== 'object') {
+      errors.push(`族 #${gIndex}：資料不可為 null 或 undefined`);
+      return;
+    }
+
     const chant = typeof g.chant === 'string' ? g.chant : '';
     const mapping = Array.isArray(g.mapping) ? g.mapping : [];
     const groupLabel = `族 ${g.group}`;
@@ -91,6 +103,11 @@ export function validateGroups(groups, elements) {
     }
 
     mapping.forEach((m, i) => {
+      if (!m || typeof m !== 'object') {
+        errors.push(`${groupLabel}：mapping 第 ${i + 1} 筆資料不可為 null 或 undefined`);
+        return;
+      }
+
       if (chant[i] !== undefined && m.char !== chant[i]) {
         errors.push(
           `${groupLabel} 第 ${i + 1} 個字：mapping.char 為「${m.char}」，但口訣第 ${i + 1} 個字為「${chant[i]}」`
@@ -128,11 +145,18 @@ export function validateGroups(groups, elements) {
  */
 export function validateStages(stages, elements) {
   const errors = [];
-  const elementsByZ = new Map((elements || []).map(el => [el.z, el]));
+  const elementsByZ = new Map(
+    (elements || []).filter(el => el && typeof el === 'object').map(el => [el.z, el])
+  );
   const seenId = new Set();
   const seenZAcrossStages = new Map(); // z -> 已收錄的 stage id
 
-  (stages || []).forEach(stage => {
+  (stages || []).forEach((stage, index) => {
+    if (!stage || typeof stage !== 'object') {
+      errors.push(`關卡 #${index}：資料不可為 null 或 undefined`);
+      return;
+    }
+
     const label = `關卡 id=${stage.id}（${stage.name || ''}）`;
 
     if (seenId.has(stage.id)) {

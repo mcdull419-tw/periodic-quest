@@ -60,3 +60,43 @@ test('validateStages 抓出指向不存在的元素', () => {
   );
   ok(errs.length > 0, '應回報 stage 內有不存在的元素');
 });
+
+// 以下五個測試涵蓋「陣列內含 null / undefined 項目」的對抗性案例。
+// 這種情況在真實情境下會發生（例如 Haiku 產生資料時放棄某個元素留了
+// 佔位符、或修 JSON 語法錯誤時手滑漏刪一筆），驗證函式必須清楚回報
+// 是第幾筆有問題，而不是讓整支驗證被未捕捉例外中斷。
+
+test('validateElements 對 elements 陣列內的 null 項目不崩潰，且回報錯誤', () => {
+  const errs = validateElements([null]);
+  ok(errs.length > 0, '應回報第 0 筆為 null');
+});
+
+test('validateGroups 對 groups 陣列內的 null 項目不崩潰，且回報錯誤', () => {
+  const elements = [{ z: 1, symbol: 'H', zh: '氫', period: 1, group: 1, mainGroup: '1A', category: 'nonmetal' }];
+  const errs = validateGroups([null], elements);
+  ok(errs.length > 0, '應回報 groups 第 0 筆為 null');
+});
+
+test('validateGroups 對 elements 陣列內的 null 項目不崩潰', () => {
+  const groups = [{
+    group: '1A', name: '鹼金族', chant: '請',
+    mapping: [{ char: '請', z: 1, symbol: 'H', zh: '氫' }]
+  }];
+  const errs = validateGroups(groups, [null]);
+  ok(errs.length > 0, '應回報 mapping 指向的 z=1 在 elements 中找不到');
+});
+
+test('validateGroups 對 mapping 陣列內的 null 項目不崩潰，且回報錯誤', () => {
+  const elements = [{ z: 1, symbol: 'H', zh: '氫', period: 1, group: 1, mainGroup: '1A', category: 'nonmetal' }];
+  const errs = validateGroups([{
+    group: '1A', name: '鹼金族', chant: '請',
+    mapping: [null]
+  }], elements);
+  ok(errs.length > 0, '應回報 mapping 第 1 筆為 null');
+});
+
+test('validateStages 對 stages 陣列內的 null 項目不崩潰，且回報錯誤', () => {
+  const elements = [{ z: 1, symbol: 'H', zh: '氫', period: 1, group: 1, mainGroup: '1A', category: 'nonmetal' }];
+  const errs = validateStages([null], elements);
+  ok(errs.length > 0, '應回報 stages 第 0 筆為 null');
+});
