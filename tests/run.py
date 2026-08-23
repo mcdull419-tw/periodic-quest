@@ -27,12 +27,20 @@ def strip_modules(src):
     return src
 
 
+class MissingSource(Exception):
+    """來源檔不存在。用例外而非直接印訊息，讓 main 決定怎麼回報。"""
+
+
 def build_bundle(paths):
     parts = [HARNESS.read_text(encoding="utf-8")]
     for p in paths:
         path = pathlib.Path(p)
         if not path.is_absolute():
             path = ROOT / path
+        # TDD 的第一步就是「檔案還沒建立」，這條路徑會天天走到。
+        # 讓它噴 Python traceback 只會讓人以為是測試工具壞了。
+        if not path.is_file():
+            raise MissingSource(p)
         parts.append("// ==== %s ====" % p)
         parts.append(strip_modules(path.read_text(encoding="utf-8")))
     parts.append(FOOTER)
@@ -43,7 +51,11 @@ def main(paths):
     if not paths:
         sys.stderr.write("用法：python3 tests/run.py <src.js>... <file.test.js>\n")
         return 2
-    bundle = build_bundle(paths)
+    try:
+        bundle = build_bundle(paths)
+    except MissingSource as e:
+        sys.stderr.write("找不到來源檔：%s\n" % e)
+        return 2
     with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
                                      encoding="utf-8") as f:
         f.write(bundle)
