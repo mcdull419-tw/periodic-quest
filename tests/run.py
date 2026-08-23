@@ -54,12 +54,26 @@ def main(paths):
     # 注意：osascript 執行 JXA 時，console.log 的輸出一律導向 stderr，
     # 不會出現在 stdout（已實測確認，即使沒有拋出例外也一樣）。
     # 因此測試結果訊息（PASS/FAIL、通過/失敗統計）實際上都在 stderr 裡，
-    # 必須印出來，只過濾掉 osascript 自己附加的技術性錯誤列
-    # （script 拋出 TESTS_FAILED 時會多一行 "execution error: ..."）。
-    stderr_lines = [ln for ln in result.stderr.splitlines()
-                     if "execution error" not in ln]
-    if stderr_lines:
-        sys.stdout.write("\n".join(stderr_lines) + "\n")
+    # 必須印出來。
+    #
+    # osascript 在腳本擲出未捕捉例外時，會在 stderr 最後多附加一行
+    # 自己合成的技術性錯誤列，格式固定為
+    # "<腳本暫存檔路徑>: execution error: <錯誤訊息> (<錯誤碼>)"。
+    # 這裡用「精確錨定該暫存檔路徑」的正規表示式只移除那一行，
+    # 而不是用「行內含有 execution error 字串」這種泛用子字串比對
+    # ——後者會連測試訊息本身剛好提到那幾個字的行都一併誤殺。
+    stderr_text = result.stderr
+    lines = stderr_text.splitlines()
+    synth_line = re.compile(r'^' + re.escape(tmp) + r': execution error: .*$')
+    filtered = [ln for ln in lines if not synth_line.match(ln)]
+    # 保底：如果例外發生在任何 test() 呼叫之前（例如來源檔語法錯誤，
+    # 或測試檔在 test() 之外的頂層程式碼直接拋出），stderr 就只會有
+    # 那唯一一行合成錯誤列，過濾後會變成完全沒有輸出。這種情況下
+    # 過濾前的原始 stderr 才是唯一的除錯線索，絕對不能吞掉——否則
+    # 又會重現「exit code 正確但畫面全空、看不出原因」的危險狀況。
+    output_lines = filtered if any(ln.strip() for ln in filtered) else lines
+    if output_lines:
+        sys.stdout.write("\n".join(output_lines) + "\n")
     return 1 if result.returncode != 0 else 0
 
 
