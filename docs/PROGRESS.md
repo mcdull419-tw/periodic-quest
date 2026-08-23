@@ -57,7 +57,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ### Phase 0：地基
 - [x] 0.1 測試執行器 — Sonnet（`afc8d54..4382c5c`）
-- [x] 0.2 PWA 外殼與設計 token — Sonnet（`37f56d9`）
+- [x] 0.2 PWA 外殼與設計 token — Sonnet（`deacd53..110a8d3`）
 
 ### Phase 1：資料
 > **執行順序已調整為 1.1 → 1.3 → 1.2 → 1.4**（見下方裁決 B）
@@ -122,6 +122,8 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 - `tests/run.py` 的 `build_bundle()` 讀不到來源檔時會噴 Python traceback
   而非乾淨錯誤訊息。不影響正確性，留給最終 review 分流。
+- `apple-touch-icon` 只提供 SVG 沒有 PNG 備援。iOS 17 之前的 Safari 不支援
+  SVG 作為主畫面圖示，會退回用頁面截圖。現今裝置多已 iOS 17+，影響機率低。
 - `tests/index.html` 與 `index.html`（PWA 外殼）都**只驗證到「用
   `python3 -m http.server` 開，所有檔案都能以正確 HTTP 200／Content-Type
   回應」**，尚未在真實瀏覽器裡實際渲染過（環境無可操作的瀏覽器——機器上有
