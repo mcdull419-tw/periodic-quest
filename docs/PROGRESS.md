@@ -1,7 +1,7 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-23
-**目前位置：** Plan 1 尚未開工，下一步是 Task 0.1
+**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 Task 0.1，下一步是 Task 0.2
 
 ---
 
@@ -56,13 +56,15 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 ## 進度
 
 ### Phase 0：地基
-- [ ] 0.1 測試執行器 — Sonnet
+- [x] 0.1 測試執行器 — Sonnet（`afc8d54..4382c5c`）
 - [ ] 0.2 PWA 外殼與設計 token — Sonnet
 
 ### Phase 1：資料
+> **執行順序已調整為 1.1 → 1.3 → 1.2 → 1.4**（見下方裁決 B）
+
 - [ ] 1.1 資料驗證測試 — Sonnet
-- [ ] 1.2 八族口訣資料 — Sonnet
 - [ ] 1.3 118 個元素資料 — **Haiku**
+- [ ] 1.2 八族口訣資料 — Sonnet
 - [ ] 1.4 關卡資料 — Sonnet
 
 ### Phase 2：核心邏輯
@@ -88,11 +90,35 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 0.1：測試執行器**
+**Task 0.2：PWA 外殼與設計 token**
 
-先做這個，因為後面每一個 task 都靠它驗收。做完要確認一件事：
-故意寫一個會失敗的測試，跑起來必須真的回報失敗且 exit code 為 1。
-一個永遠回報成功的測試執行器比沒有測試更危險。
+## 執行期裁決（計畫的修正，覆寫計畫原文）
+
+執行前的衝突掃描與各 task 的 review 過程中做出的決定。完整記錄在
+`.superpowers/sdd/2026-08-23-periodic-quest-core/progress.md`（該目錄已 gitignore）。
+
+- **裁決 A**：`tests/make-data-fixture.py` 改由 Task 1.3 建立（計畫原本列在 1.2）。
+- **裁決 B**：Phase 1 執行順序改為 **1.1 → 1.3 → 1.2 → 1.4**。計畫原順序要求
+  Task 1.2 的 `validateGroups(GROUPS, ELEMENTS)` 在 `elements.json` 尚不存在時
+  就通過，Step 3 同時寫著「這是預期的失敗」與「Expected: 0 failed」，自相矛盾。
+  依賴方向是單向的：elements 不需要 groups 即可驗證，反之不成立。
+  **實作者不得為了讓測試變綠而弱化 `validateGroups` 的斷言。**
+- **裁決 C**：Task 3.5 的檔案清單補上 `Create: js/ui/quiz-runner.js` 與
+  `Modify: js/ui/screen-quiz.js`。
+- **裁決 D**：新增 `js/data/load.js`，匯出 `async loadData()` →
+  `{ elements, groups, stages }`，含模組層級快取。歸入 Task 3.2。計畫原本
+  沒有任何 task 定義瀏覽器端如何載入 JSON。
+- **Task 0.1 裁決**：計畫提供的 `run.py` 範例程式碼有實質 bug——JXA 的
+  `console.log` 寫到 stderr 而非 stdout，原程式碼會讓測試結果訊息完全不顯示。
+  已修正並實測六種情境。**計畫文件 Task 0.1 Step 2 的程式碼已過時，
+  以 `tests/run.py` 的實際內容為準。**
+
+## 已知的待處理小問題
+
+- `tests/run.py` 的 `build_bundle()` 讀不到來源檔時會噴 Python traceback
+  而非乾淨錯誤訊息。不影響正確性，留給最終 review 分流。
+- `tests/index.html` 未經真實瀏覽器實測（環境無瀏覽器）。它是人工備援管道，
+  主要驗收管道 `run.py` 已充分實測。待 Task 0.2 起有 http.server 時順帶確認。
 
 ---
 
