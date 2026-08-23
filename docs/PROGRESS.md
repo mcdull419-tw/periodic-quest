@@ -1,7 +1,7 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-23
-**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 8/18，下一步是 Task 2.3
+**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 9/18，下一步是 Task 2.4
 
 ---
 
@@ -70,7 +70,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 ### Phase 2：核心邏輯
 - [x] 2.1 狀態儲存與 schema 遷移 — Sonnet（`2b82a7f..c84329e`，12 tests）
 - [x] 2.2 Leitner 複習排程 — Sonnet（`4070dbd..120ce63`，17 tests）
-- [ ] 2.3 出題來源與抽題權重 — Sonnet
+- [x] 2.3 出題來源與抽題權重 — Sonnet（`8c957f2..1dba854`，7 tests）
 - [ ] 2.4 干擾選項 — Sonnet
 - [ ] 2.5 題目生成與判分 — Sonnet
 - [ ] 2.6 進度與關卡解鎖 — Sonnet
@@ -90,13 +90,13 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 2.3：出題來源與抽題權重**
+**Task 2.4：干擾選項**
 
 Phase 1 已全部完成，資料層就緒。`data/` 底下三個檔（elements、mnemonics-groups、
 stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗確認會失敗：
 118 筆中文名對照表、中文名重複檢查、44 筆口訣交叉比對。
 
-目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17。
+目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、`quiz-pool` 7。
 
 ## 執行期裁決（計畫的修正，覆寫計畫原文）
 
