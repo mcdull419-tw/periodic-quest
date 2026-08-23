@@ -1,7 +1,7 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-23
-**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 7/18，下一步是 Task 2.2
+**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 8/18，下一步是 Task 2.3
 
 ---
 
@@ -69,7 +69,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ### Phase 2：核心邏輯
 - [x] 2.1 狀態儲存與 schema 遷移 — Sonnet（`2b82a7f..c84329e`，12 tests）
-- [ ] 2.2 Leitner 複習排程 — Sonnet
+- [x] 2.2 Leitner 複習排程 — Sonnet（`4070dbd..120ce63`，17 tests）
 - [ ] 2.3 出題來源與抽題權重 — Sonnet
 - [ ] 2.4 干擾選項 — Sonnet
 - [ ] 2.5 題目生成與判分 — Sonnet
@@ -90,13 +90,13 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 2.2：Leitner 複習排程**
+**Task 2.3：出題來源與抽題權重**
 
 Phase 1 已全部完成，資料層就緒。`data/` 底下三個檔（elements、mnemonics-groups、
 stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗確認會失敗：
 118 筆中文名對照表、中文名重複檢查、44 筆口訣交叉比對。
 
-目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12。
+目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17。
 
 ## 執行期裁決（計畫的修正，覆寫計畫原文）
 
@@ -148,6 +148,8 @@ stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗�
   為合法族碼。有人手改 `data/stages.json` 填入負數或亂寫族碼不會被擋。
 - `store.js` 的 `migrate` 對「`cards` 是陣列而非物件」不修正也不報錯，
   `getCard` 會安靜回傳 `null`。只可能來自手動竄改 localStorage。
+- `scheduler.js` 的 `weakCards(cards, limit)` 當 `limit` 為負數時，`slice(0, limit)`
+  會從尾端砍掉 `|limit|` 張而非回傳空陣列，安靜地回傳「幾乎全部」。
 - `tests/index.html` 與 `index.html`（PWA 外殼）都**只驗證到「用
   `python3 -m http.server` 開，所有檔案都能以正確 HTTP 200／Content-Type
   回應」**，尚未在真實瀏覽器裡實際渲染過（環境無可操作的瀏覽器——機器上有
