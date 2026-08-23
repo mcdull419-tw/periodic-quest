@@ -59,11 +59,21 @@ self.addEventListener("fetch", (event) => {
       return fetch(event.request)
         .then((response) => {
           // 只快取成功的回應，避免把 404 或錯誤內容存進去。
+          //
+          // 注意：這段快取寫入必須用 event.waitUntil() 保護存活期。
+          // event.respondWith() 只會把 SW 的存活期延到「它收到的 Promise
+          // settle 為止」；下面的 return response 一執行，respondWith 就
+          // settle 了。若這裡的 caches.open().then(...) 沒有另外交給
+          // waitUntil()，規範上瀏覽器隨時可能在寫入完成前就把 SW 終止，
+          // 導致這次動態快取「射後不理」失敗——症狀是學生線上瀏覽過某個
+          // 畫面，離線後卻打不開，而且難以重現。
           if (response && response.ok) {
             const clone = response.clone();
-            caches
-              .open(CACHE_VERSION)
-              .then((cache) => cache.put(event.request, clone));
+            event.waitUntil(
+              caches
+                .open(CACHE_VERSION)
+                .then((cache) => cache.put(event.request, clone))
+            );
           }
           return response;
         })
