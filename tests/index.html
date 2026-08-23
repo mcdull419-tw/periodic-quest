@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<title>Periodic Quest 測試（瀏覽器版）</title>
+<style>
+  body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; margin: 2rem; }
+  pre { background: #f4f4f4; padding: 1rem; border-radius: 4px; white-space: pre-wrap; }
+  #files { color: #555; }
+</style>
+</head>
+<body>
+<h1>Periodic Quest 測試（瀏覽器版）</h1>
+<p>
+  這是給人看的備援管道，CI 與 sub-agent 一律用
+  <code>python3 tests/run.py</code>。
+</p>
+<p id="files">載入中…</p>
+<pre id="output">執行中…</pre>
+
+<script src="harness.js"></script>
+<script>
+  // 瀏覽器直接以 <script> 載入帶有 export 關鍵字的原始碼會語法錯誤，
+  // 因此改用 fetch 取得檔案內容、以與 tests/run.py 相同的規則
+  // 去除 module 語法後再 eval 執行。
+
+  // 這裡列出目前載入的檔案清單：先載原始碼，再載測試檔。
+  var FILES = [
+    "fixtures/sample.js",
+    "fixtures/sample.test.js"
+  ];
+
+  function stripModules(src) {
+    src = src.replace(/^\s*import\s+[^;]*?;\s*$/gms, "");
+    src = src.replace(/^\s*export\s+default\s+/gm, "");
+    src = src.replace(/^\s*export\s+/gm, "");
+    return src;
+  }
+
+  function renderFileList(files) {
+    document.getElementById("files").textContent =
+      "已載入檔案：" + files.join("、");
+  }
+
+  async function run() {
+    var outputEl = document.getElementById("output");
+    try {
+      renderFileList(FILES);
+      for (var i = 0; i < FILES.length; i++) {
+        var res = await fetch(FILES[i]);
+        if (!res.ok) {
+          throw new Error("無法載入 " + FILES[i] + "（HTTP " + res.status + "）");
+        }
+        var src = await res.text();
+        // eslint-disable-next-line no-eval
+        (0, eval)(stripModules(src));
+      }
+      var failCount = __report();
+      outputEl.textContent = __msgs.join("\n") + "\n\n" +
+        __pass + " passed, " + __fail + " failed";
+      outputEl.style.color = failCount > 0 ? "#c0392b" : "#2e7d32";
+    } catch (e) {
+      outputEl.textContent = "執行測試時發生錯誤：" + e.message;
+      outputEl.style.color = "#c0392b";
+    }
+  }
+
+  run();
+</script>
+</body>
+</html>
