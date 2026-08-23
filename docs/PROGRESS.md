@@ -64,7 +64,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 - [x] 1.1 資料驗證測試 — Sonnet（`9b8755a..801ccf4`，13 tests）
 - [x] 1.3 118 個元素資料 — Haiku 起草、Sonnet 修正（`62595cc..fc17fec`，23 tests）
-- [ ] 1.2 八族口訣資料 — Sonnet
+- [x] 1.2 八族口訣資料 — Sonnet（`c62c29c..37fba4f`，6 tests；44 主族交叉比對通過）
 - [ ] 1.4 關卡資料 — Sonnet
 
 ### Phase 2：核心邏輯
