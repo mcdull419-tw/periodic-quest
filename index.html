@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>元素週期表大挑戰</title>
+
+<!-- 讓 iPhone「加入主畫面」後以全螢幕獨立 App 樣式顯示，不出現 Safari 網址列 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="元素週期表">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<main id="app" aria-live="polite">
+  <!-- 各畫面的 renderFn 會清空並填入這個容器，見 js/main.js -->
+</main>
+
+<nav class="bottom-nav" aria-label="主要導覽">
+  <a class="nav-link" href="#home" data-screen="home">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 11.5 12 4l8 7.5"/>
+      <path d="M6 10v9h5v-5h2v5h5v-9"/>
+    </svg>
+    <span>首頁</span>
+  </a>
+  <a class="nav-link" href="#table" data-screen="table">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span>週期表</span>
+  </a>
+  <a class="nav-link" href="#quiz" data-screen="quiz">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M8 12.5l2.5 2.5L16 9"/>
+    </svg>
+    <span>測驗</span>
+  </a>
+  <a class="nav-link" href="#review" data-screen="review">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3 2"/>
+    </svg>
+    <span>複習</span>
+  </a>
+</nav>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

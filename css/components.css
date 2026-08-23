@@ -1,0 +1,133 @@
+/* ==========================================================================
+   共用元件樣式。這裡放版面骨架（app 容器、底部導覽列）與少數
+   之後每個畫面都會用到的基礎元件（卡片、按鈕）。
+   畫面專屬的樣式由各自的 js/ui/screen-*.js 用行內 style 或
+   之後新增的專屬 CSS 檔處理，不塞進這個檔案。
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* 主要內容容器，各畫面的 renderFn 會把內容塞進這裡 */
+#app {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--gap) var(--gap) calc(var(--nav-height) + var(--gap));
+  padding-top: calc(var(--gap) + var(--safe-top));
+  overflow-y: auto;
+}
+
+/* ---- 底部導覽列 -------------------------------------------------------- */
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1 1 0;
+  height: 100%;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  user-select: none;
+}
+
+.nav-link svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-link[aria-current="page"] {
+  color: var(--accent);
+}
+
+/* ---- 基礎元件（供之後畫面沿用） ---------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.6em 1.2em;
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* ---- 尚未有內容的畫面（找不到對應 render 函式時顯示） ------------------ */
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+  min-height: 60vh;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.placeholder h2 {
+  color: var(--text);
+  margin: 0;
+}

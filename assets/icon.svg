@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100" role="img" aria-label="元素週期表 App 圖示：一格元素方格內有抽象原子軌道圖案">
+  <!-- 自繪圖示：以「元素方格」造型（圓角方塊）搭配抽象原子軌道，
+       中性科學風格，不含任何官方圖片、角色或商標素材。 -->
+  <rect x="4" y="4" width="92" height="92" rx="20" fill="#2f6fed"/>
+
+  <g fill="none" stroke="#ffffff" stroke-width="3.2" opacity="0.95">
+    <ellipse cx="50" cy="50" rx="34" ry="14"/>
+    <ellipse cx="50" cy="50" rx="34" ry="14" transform="rotate(60 50 50)"/>
+    <ellipse cx="50" cy="50" rx="34" ry="14" transform="rotate(120 50 50)"/>
+  </g>
+
+  <g fill="#ffffff">
+    <circle cx="50" cy="50" r="7"/>
+    <circle cx="84" cy="50" r="4"/>
+    <circle cx="84" cy="50" r="4" transform="rotate(60 50 50)"/>
+    <circle cx="84" cy="50" r="4" transform="rotate(120 50 50)"/>
+  </g>
+</svg>

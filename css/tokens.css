@@ -1,0 +1,65 @@
+/* ==========================================================================
+   設計 token：所有色彩、字級、間距集中在這裡定義。
+   換主題／換配色只改這個檔案，其他 CSS 一律只讀取變數。
+
+   注意（spec §8.2）：這裡刻意只給一組中性的預設配色，
+   不預先硬寫任何宣稱為「官方應援色」的色值。實際配色留待學生
+   在設定畫面自行挑選（Plan 2 實作）。
+   ========================================================================== */
+
+:root {
+  /* 色彩：淺色模式（預設） */
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-alt: #eceef1;
+  --border: #dde1e6;
+  --text: #1c1e21;
+  --text-dim: #6b7280;
+  --accent: #2f6fed;
+  --accent-2: #7c5cff;
+  --correct: #2e7d32;
+  --wrong: #c0392b;
+
+  /* 陰影（淺色模式用較淡的陰影） */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+  /* 字型：只用系統字體堆疊，不連外部字型服務 */
+  --font: -apple-system, "PingFang TC", "Heiti TC", sans-serif;
+  --font-size-sm: 0.85rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+
+  /* 間距與形狀 */
+  --gap: 16px;
+  --gap-sm: 8px;
+  --gap-lg: 24px;
+  --radius: 12px;
+  --radius-sm: 8px;
+
+  /* 版面尺寸 */
+  --nav-height: 64px;
+  --max-width: 480px;
+
+  /* iPhone 安全區域（瀏海／Home Indicator） */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 深色模式：跟隨系統設定，覆寫同一組變數 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --surface: #1e2126;
+    --surface-alt: #262a31;
+    --border: #33383f;
+    --text: #f2f3f5;
+    --text-dim: #9aa0a8;
+    --accent: #5b8dfd;
+    --accent-2: #a78bfa;
+    --correct: #4caf50;
+    --wrong: #e57373;
+
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+}

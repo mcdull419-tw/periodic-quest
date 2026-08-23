@@ -1,0 +1,20 @@
+{
+  "name": "元素週期表大挑戰",
+  "short_name": "元素週期表",
+  "description": "用族口訣與間隔複習，幫台灣國中生背熟元素週期表。",
+  "lang": "zh-Hant-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f6f8",
+  "theme_color": "#2f6fed",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
