@@ -1,7 +1,8 @@
 # Periodic Quest 進度
 
-**最後更新：** 2026-08-23
-**目前位置：** 分支 `feat/plan-1-core`。已完成 10/18。**Task 2.5 進行中**——實作與修正都已 commit（`0aed820`，14 tests 全過），但 scoped re-review 尚未跑。
+**最後更新：** 2026-08-24
+**目前位置：** 分支 `feat/plan-1-core`。已完成 12/18，**Phase 2 結束，核心邏輯全部就緒**。
+下一步是 Task 3.1（Phase 3 的第一個，開始寫介面）。
 
 ---
 
@@ -72,8 +73,8 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 - [x] 2.2 Leitner 複習排程 — Sonnet（`4070dbd..120ce63`，17 tests）
 - [x] 2.3 出題來源與抽題權重 — Sonnet（`8c957f2..1dba854`，7 tests）
 - [x] 2.4 干擾選項 — Sonnet（`687a93c..8363c61`，6 tests）
-- [~] 2.5 題目生成與判分 — Sonnet（`691a8ab`+`0aed820`，14 tests；**待複審**）
-- [ ] 2.6 進度與關卡解鎖 — Sonnet
+- [x] 2.5 題目生成與判分 — Sonnet 實作、Opus 複審修正（`691a8ab`..`302d53d`，16 tests）
+- [x] 2.6 進度與關卡解鎖 — Opus（`d572a88`，16 tests；串真實 fixture 時 18）
 
 ### Phase 3：最小可用介面
 - [ ] 3.1 互動式週期表元件 — Sonnet
@@ -90,18 +91,17 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**先收尾 Task 2.5：跑 scoped re-review**
+**Task 3.1：互動式週期表元件**（`docs/superpowers/plans/2026-08-23-periodic-quest-core.md`）
 
-實作與修正都已 commit 且 14 個測試全過，但複審還沒跑完。diff 已備妥在
-`.superpowers/sdd/2026-08-23-periodic-quest-core/review-691a8ab..0aed820.diff`。
+Phase 3 的驗證方式與前面不同：`js/ui/` 不寫自動化測試，改為在
+`python3 -m http.server 8000` 下用瀏覽器人工確認。每個 task 的 brief
+都列了明確的人工驗收項目。**但這台機器目前沒有可操作的瀏覽器**
+（有 Safari／Chrome，但 `claude-in-chrome` 擴充功能未連線），
+所以 Phase 3 的「人工驗收」實際上做不到。開始 Task 3.1 之前先確認：
+要嘛請使用者自己開瀏覽器看，要嘛接受「只驗證到 HTTP 層」並如實記錄。
+不要寫成「已驗收」。
 
-複審重點：新的重試測試是否真的走到「`makeQuestion` 回傳 `null` 後重試」的
-分支（而非碰巧通過）；`table-locate` 的測試是否確實驗證 period 與 group
-兩者皆須相符。
-
-**複審通過後接 Task 2.6：進度與關卡解鎖**，那是 Phase 2 的最後一個。
-
-### Phase 2 留給 Phase 3 的三個約束
+### Phase 2 留給 Phase 3 的約束
 
 1. 呼叫 `buildDistractors` 時傳入的 `allElements` **必須限縮到已解鎖關卡**，
    否則氦的干擾項會抽到 Og（118 號超重元素）。用
@@ -109,6 +109,16 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 2. `buildPools` 的三個池**聯集不等於** `availableZ`——已學過、不到期、
    弱項排名在 `weakLimit` 之外的卡三池都不會出現。不可假設等於全部。
 3. `buildDistractors` 對 `target` 為 `null` **沒有防呆**，呼叫端要保證合法。
+4. `makeQuestion` 回傳 `null` 是正常的控制流，不是錯誤：過渡金屬沒有口訣
+   （chant-blank）、沒有主族（group-id），只解鎖一個族時 group-id 也沒有
+   干擾項可用。UI 一律走 `nextQuestion`（它會自動換題型重試），不要自己
+   挑題型呼叫 `makeQuestion` 然後假設一定拿得到題目。
+5. 首頁的「再讓 N 個元素進入第 3 盒」直接用 `summarize` 的
+   `byStage[i].required - byStage[i].mastered`，不要自己重算 ceil 公式。
+6. `unlockedStages` 有兩個來源：`state.unlockedStages`（存起來的）與
+   `computeUnlockedStages(cards, stages)`（算出來的）。以算出來的為準，
+   存的那份只當快取——兩者不一致時（例如改過 stages 資料）要以計算結果
+   覆寫並存回。這件事還沒有人做，Task 3.5 接手時要處理。
 
 ### 測試指令有變
 
@@ -123,7 +133,18 @@ Phase 1 已全部完成，資料層就緒。`data/` 底下三個檔（elements�
 stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗確認會失敗：
 118 筆中文名對照表、中文名重複檢查、44 筆口訣交叉比對。
 
-目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 14。合計 **90**。
+目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、
+`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 16、`progress` 16。合計 **108**。
+
+一次跑完全部（`js/core/*.js` 串在一起不會撞名，已驗證）：
+
+```bash
+python3 tests/make-data-fixture.py
+for t in tests/*.test.js; do printf "%-32s " "$t"; python3 tests/run.py js/core/*.js tests/.data.js "$t" | tail -1; done
+```
+
+`progress.test.js` 末尾兩條測試會偵測 `STAGES` 是否存在：帶 fixture 跑
+（上面這個迴圈）是 18 條，照計畫的單獨指令跑是 16 條。
 
 ## 執行期裁決（計畫的修正，覆寫計畫原文）
 
@@ -145,6 +166,12 @@ stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗�
   `console.log` 寫到 stderr 而非 stdout，原程式碼會讓測試結果訊息完全不顯示。
   已修正並實測六種情境。**計畫文件 Task 0.1 Step 2 的程式碼已過時，
   以 `tests/run.py` 的實際內容為準。**
+- **Task 2.5 複審裁決**：`makeGroupId` 在干擾項掛零時回傳 `null`。門檻取
+  「至少一個干擾項」（兩個選項）而非湊滿三個——後者會讓 group-id 直到
+  解鎖四個族才出得來。
+- **Task 2.6 裁決**：計畫的介面清單外多匯出 `unlockRequirement(stage)`；
+  `isStageUnlocked` 檢查「前面每一關」而非只看前一關；`unlockRatio`
+  缺漏或非法時退回 0.8。理由見 `d572a88` 的 commit 訊息。
 - **Task 0.2 裁決**：`js/main.js` 的路由除了 brief 要求的 `#name` 形式，
   額外支援 `#name?key=value` 查詢參數解析（`navigate(name, params)` /
   `registerScreen(name, (container, params) => void)`）。這是 Task 3.3
@@ -167,12 +194,12 @@ stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗�
 
 ## 已知的待處理小問題
 
-- `tests/run.py` 的 `build_bundle()` 讀不到來源檔時會噴 Python traceback
-  而非乾淨錯誤訊息。不影響正確性，留給最終 review 分流。
 - `apple-touch-icon` 只提供 SVG 沒有 PNG 備援。iOS 17 之前的 Safari 不支援
   SVG 作為主畫面圖示，會退回用頁面截圖。現今裝置多已 iOS 17+，影響機率低。
 - `validateStages` 不檢查 `unlockRatio` 的型別與範圍，也不檢查 `groups` 是否
   為合法族碼。有人手改 `data/stages.json` 填入負數或亂寫族碼不會被擋。
+  （`progress.js` 已自保：非法 `unlockRatio` 退回 0.8，不會讓學生卡關。
+  但族碼亂寫仍然沒人擋。）
 - `store.js` 的 `migrate` 對「`cards` 是陣列而非物件」不修正也不報錯，
   `getCard` 會安靜回傳 `null`。只可能來自手動竄改 localStorage。
 - `scheduler.js` 的 `weakCards(cards, limit)` 當 `limit` 為負數時，`slice(0, limit)`
