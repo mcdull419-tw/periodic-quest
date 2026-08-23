@@ -1,7 +1,7 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-23
-**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 Task 0.1、0.2，下一步是 Phase 1（Task 1.1）
+**目前位置：** 執行中，分支 `feat/plan-1-core`。Phase 0 與 Phase 1 完成，下一步是 Task 2.1
 
 ---
 
@@ -65,7 +65,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 - [x] 1.1 資料驗證測試 — Sonnet（`9b8755a..801ccf4`，13 tests）
 - [x] 1.3 118 個元素資料 — Haiku 起草、Sonnet 修正（`62595cc..fc17fec`，23 tests）
 - [x] 1.2 八族口訣資料 — Sonnet（`c62c29c..37fba4f`，6 tests；44 主族交叉比對通過）
-- [ ] 1.4 關卡資料 — Sonnet
+- [x] 1.4 關卡資料 — Sonnet（`fb9ced3..bb59411`，5 tests）
 
 ### Phase 2：核心邏輯
 - [ ] 2.1 狀態儲存與 schema 遷移 — Sonnet
@@ -138,6 +138,8 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
   而非乾淨錯誤訊息。不影響正確性，留給最終 review 分流。
 - `apple-touch-icon` 只提供 SVG 沒有 PNG 備援。iOS 17 之前的 Safari 不支援
   SVG 作為主畫面圖示，會退回用頁面截圖。現今裝置多已 iOS 17+，影響機率低。
+- `validateStages` 不檢查 `unlockRatio` 的型別與範圍，也不檢查 `groups` 是否
+  為合法族碼。有人手改 `data/stages.json` 填入負數或亂寫族碼不會被擋。
 - `tests/index.html` 與 `index.html`（PWA 外殼）都**只驗證到「用
   `python3 -m http.server` 開，所有檔案都能以正確 HTTP 200／Content-Type
   回應」**，尚未在真實瀏覽器裡實際渲染過（環境無可操作的瀏覽器——機器上有
