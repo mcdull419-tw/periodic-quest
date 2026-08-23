@@ -11,14 +11,22 @@ const EL = [
 
 const DATA = {
   elements: EL,
-  groups: [{
-    group: '1A', name: '鹼金族', chant: '請你讓佳如設法',
-    mapping: [
-      { char: '請', z: 1,  symbol: 'H',  zh: '氫' },
-      { char: '你', z: 3,  symbol: 'Li', zh: '鋰' },
-      { char: '讓', z: 11, symbol: 'Na', zh: '鈉' }
-    ]
-  }],
+  groups: [
+    {
+      group: '1A', name: '鹼金族', chant: '請你讓佳如設法',
+      mapping: [
+        { char: '請', z: 1,  symbol: 'H',  zh: '氫' },
+        { char: '你', z: 3,  symbol: 'Li', zh: '鋰' },
+        { char: '讓', z: 11, symbol: 'Na', zh: '鈉' }
+      ]
+    },
+    // 以下三族只給族碼，沒有 chant／mapping：group-id 只用得到 group 欄位。
+    // 它們的存在是為了讓 group-id 有干擾項可抽——真實資料有八個主族，
+    // 只放 1A 的 fixture 會讓 group-id 的選項數失真。
+    { group: '2A', name: '鹼土族' },
+    { group: '6A', name: '氧族' },
+    { group: '7A', name: '鹵素' }
+  ],
   // 第二關只有鐵（過渡金屬，沒有主族、沒有口訣），
   // 專門用來驗證 nextQuestion 遇到不適用題型時會換題型重試。
   stages: [
@@ -33,6 +41,27 @@ const DATA = {
 function queueRng(values) {
   let i = 0;
   return () => values[Math.min(i++, values.length - 1)];
+}
+
+// 複製 question.js 內 shuffle 的 Fisher-Yates 演算法。用途只有一個：
+// 讓下面那個重試測試能先驗證自己的前提是否還成立（見該測試的註解）。
+function shuffleForCheck(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// 可重現的偽亂數：要掃過「很多種洗牌結果」時用它，不要用 Math.random，
+// 否則測試會變成偶發性失敗。線性同餘法，數值品質不重要，可重現才重要。
+function seededRng(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) % 2147483648;
+    return s / 2147483648;
+  };
 }
 
 test('symbol-to-zh 的題幹是符號，選項含正解', () => {
@@ -69,6 +98,25 @@ test('group-id 問元素屬於哪一族', () => {
   ok(q.options.indexOf('1A') >= 0);
 });
 
+// 第一關只解鎖 1A，scopedData.groups 就只剩 1A 一筆，group-id 會做出
+// 「只有一個選項」的題目——正解直接寫在唯一的選項上。這是每個學生開局
+// 都會遇到的情境，不是邊角案例。干擾項掛零時應回傳 null，讓 nextQuestion
+// 換題型。
+test('可選族別只剩一個時不產生 group-id 題', () => {
+  const onlyOneGroup = { elements: EL, groups: [DATA.groups[0]], stages: DATA.stages };
+  eq(makeQuestion('group-id', 11, onlyOneGroup, () => 0), null);
+});
+
+test('nextQuestion 在只解鎖第一關時不會出單選項的 group-id', () => {
+  const rng = seededRng(7);
+  for (let i = 0; i < 50; i++) {
+    const q = nextQuestion({ cards: [], stages: DATA.stages, unlockedStages: [1],
+                             data: DATA, now: 0 }, rng);
+    ok(q !== null, 'nextQuestion 不該回傳 null');
+    if (q.options) ok(q.options.length >= 2, q.type + ' 的選項不該少於兩個');
+  }
+});
+
 test('沒有口訣的元素不會產生 chant-blank 題', () => {
   eq(makeQuestion('chant-blank', 26, DATA, () => 0), null);
 });
@@ -87,6 +135,8 @@ test('checkAnswer 對 table-locate 要求 period 與 group 皆相符', () => {
   eq(checkAnswer(q, { period: 3, group: 2 }).correct, false);
   // 只有 group 對：period 錯仍算錯
   eq(checkAnswer(q, { period: 4, group: 1 }).correct, false);
+  // 使用者還沒點任何格子就送出，answer 會是 null；要判錯而不是拋例外
+  eq(checkAnswer(q, null).correct, false);
   eq(checkAnswer(q, { period: 3, group: 1 }).correctAnswer, { period: 3, group: 1 });
 });
 
@@ -101,7 +151,15 @@ test('nextQuestion 換題型重試：過渡金屬先抽到 chant-blank 仍能拿
   // 6 次 Fisher-Yates 迭代（i = 6..1）。這組序列讓前兩次呼叫的結果不影響
   // 結論（關卡 2 只有鐵一個元素可選），後六次刻意讓 shuffle 後陣列的
   // 第 0 個元素固定是 QUESTION_TYPES 原本索引 5 的 'chant-blank'。
-  const rng = queueRng([0.5, 0.5, 0.9, 0.0, 0.9, 0.9, 0.9, 0.9]);
+  const seq = [0.5, 0.5, 0.9, 0.0, 0.9, 0.9, 0.9, 0.9];
+
+  // 前提檢查。洗牌結果同時取決於這組序列「和」QUESTION_TYPES 的原始順序，
+  // 日後若有人調動 QUESTION_TYPES，第一個抽到的就不再是 chant-blank——
+  // 這個測試會照樣通過，卻已經不再走到重試分支，coverage 靜悄悄消失。
+  // 先在這裡把前提釘死：前提一垮就直接失敗，逼人重新調序列。
+  eq(shuffleForCheck(QUESTION_TYPES, queueRng(seq.slice(2)))[0], 'chant-blank');
+
+  const rng = queueRng(seq);
   const q = nextQuestion(
     { cards: [], stages: DATA.stages, unlockedStages: [2], data: DATA, now: 0 },
     rng

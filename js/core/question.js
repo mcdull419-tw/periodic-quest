@@ -134,10 +134,17 @@ function makeChantBlank(el, data) {
 // group-id：問元素屬於哪一族（主族代號，如 '1A'）。
 // 干擾項從資料裡其他族的代號取（同樣由呼叫端限縮到解鎖範圍）；
 // 過渡金屬沒有主族，回傳 null。
+//
+// 只解鎖第一關時，限縮後的 data.groups 只剩 1A 一筆，干擾項會掛零，
+// 做出「唯一選項就是正解」的題目——而那正是每個學生開局的處境。
+// 這種情況同樣回傳 null，交給 nextQuestion 換別的題型。門檻設在
+// 「至少一個干擾項」（兩個選項）而非湊滿 CHOICE_COUNT：後者會讓
+// group-id 直到解鎖四個族才出得來，把題型鎖太久。
 function makeGroupId(el, data, rng) {
   if (!el.mainGroup) return null;
   const otherRefs = data.groups.filter(g => g.group !== el.mainGroup).map(g => g.group);
   const distractors = shuffle(otherRefs, rng).slice(0, CHOICE_COUNT);
+  if (distractors.length === 0) return null;
   return {
     type: 'group-id', z: el.z, prompt: el.symbol,
     options: buildOptions(el.mainGroup, distractors, rng),
