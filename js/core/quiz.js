@@ -1,11 +1,14 @@
-// 測驗出題引擎。
+// 測驗出題引擎：來源池、抽題權重、干擾選項。
 //
-// 這個檔案由三個 task 逐步建構：
+// 這個檔案由 task 2.3、2.4 逐步建構：
 //   2.3：出題來源池（due／weak／fresh）與抽題權重
-//   2.4（本次）：干擾選項（distractors）
-//   2.5：題目生成與判分
-// 為了方便後續追加，內容依「來源池」「權重挑選」分節排列，
-// 不要把所有東西塞進一個大函式。
+//   2.4：干擾選項（distractors）
+// 內容依「來源池」「權重挑選」「干擾選項」分節排列。
+//
+// task 2.5（題目生成與判分：QUESTION_TYPES、makeQuestion、nextQuestion、
+// checkAnswer）改放在 js/core/question.js——本檔加上該部分會超過
+// 400 行的檔案長度上限，因此拆檔。question.js 會 import 這個檔案
+// 匯出的 buildPools／pickSource／availableElements／buildDistractors。
 //
 // 純函式，不得存取 document / window / localStorage 等全域物件，
 // 這樣測試才能在沒有瀏覽器的 JXA 環境下執行。
