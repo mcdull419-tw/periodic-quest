@@ -1,8 +1,8 @@
 // 測驗出題引擎。
 //
 // 這個檔案由三個 task 逐步建構：
-//   2.3（本次）：出題來源池（due／weak／fresh）與抽題權重
-//   2.4：干擾選項（distractors）
+//   2.3：出題來源池（due／weak／fresh）與抽題權重
+//   2.4（本次）：干擾選項（distractors）
 //   2.5：題目生成與判分
 // 為了方便後續追加，內容依「來源池」「權重挑選」分節排列，
 // 不要把所有東西塞進一個大函式。
@@ -102,4 +102,106 @@ export function pickSource(pools, rng = Math.random) {
     if (pools[name] && pools[name].length > 0) return name;
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// 干擾選項（distractors）
+// ---------------------------------------------------------------------------
+
+// 視為「金」部的分類：金屬相關的五大類 + 鑭錒系，中文名多從「釒」旁
+// （鈉、鉀、鈣、鐵、銅……）。
+const METAL_CATEGORIES = new Set([
+  'alkali-metal', 'alkaline-earth', 'transition-metal',
+  'post-transition-metal', 'lanthanide', 'actinide'
+]);
+
+/**
+ * 把陣列依 Fisher-Yates 演算法用 rng 洗牌，回傳新陣列（不修改原陣列）。
+ * @param {any[]} arr
+ * @param {() => number} rng 回傳 [0, 1) 亂數的函式
+ * @returns {any[]}
+ */
+function shuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/**
+ * 判斷兩個元素符號是否形近：首字母相同，或兩個都是兩字母符號且僅差一個字元。
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+function symbolSimilar(a, b) {
+  if (a[0] === b[0]) return true;
+  if (a.length === 2 && b.length === 2) {
+    let diff = 0;
+    for (let i = 0; i < 2; i++) {
+      if (a[i] !== b[i]) diff++;
+    }
+    return diff === 1;
+  }
+  return false;
+}
+
+/**
+ * 用「category／state」硬編近似出元素中文名的偏旁類別，
+ * 不做真正的部首查表（JS 無法直接取得部首，這個近似已足夠）。
+ * @param {object} el
+ * @returns {'metal' | 'gas' | 'metalloid' | 'liquid' | 'stone' | null}
+ */
+function radicalOf(el) {
+  if (METAL_CATEGORIES.has(el.category)) return 'metal'; // 金部
+  if (el.category === 'noble-gas' || el.state === 'gas') return 'gas'; // 气部
+  if (el.category === 'metalloid') return 'metalloid'; // 石部（類金屬）
+  if (el.state === 'liquid') return 'liquid'; // 水部（氵）
+  if (el.category === 'nonmetal' || el.category === 'halogen') return 'stone'; // 石部（固態非金屬／鹵素）
+  return null;
+}
+
+/**
+ * 為目標元素挑選 `count` 個錯誤選項（干擾項）。
+ * 依優先序逐層蒐集候選，取滿為止；每層內先用 rng 洗牌再取用，
+ * 避免每次都拿到同樣的干擾項。已取用的以 z 去重：
+ *   1. 同族（mainGroup 相同，且不得為 null——過渡金屬／鑭錒系彼此不視為同族）
+ *   2. 同週期（period 相同）
+ *   3. 符號形近（首字母相同，或兩字母符號僅差一個字元）
+ *   4. 中文名形近（共用偏旁：金、气、石、水四類的硬編近似）
+ *   5. 仍不足時隨機補
+ * 候選不足 count 時，回傳能給的最大數量，不丟例外。
+ * @param {object} target 目標元素
+ * @param {object[]} allElements 全部候選元素（含 target 本身）
+ * @param {number} count 需要的干擾項數量
+ * @param {() => number} rng 回傳 [0, 1) 亂數的函式，預設 Math.random
+ * @returns {object[]} 干擾項元素陣列，長度 <= count
+ */
+export function buildDistractors(target, allElements, count, rng = Math.random) {
+  const pool = allElements.filter(e => e && e.z !== target.z);
+  const usedZ = new Set([target.z]);
+  const chosen = [];
+
+  function takeFromLayer(predicate) {
+    if (chosen.length >= count) return;
+    const layerCandidates = pool.filter(e => !usedZ.has(e.z) && predicate(e));
+    for (const e of shuffle(layerCandidates, rng)) {
+      if (chosen.length >= count) break;
+      chosen.push(e);
+      usedZ.add(e.z);
+    }
+  }
+
+  takeFromLayer(e => e.mainGroup != null && e.mainGroup === target.mainGroup);
+  takeFromLayer(e => e.period === target.period);
+  takeFromLayer(e => symbolSimilar(target.symbol, e.symbol));
+  takeFromLayer(e => {
+    const r = radicalOf(e);
+    return r !== null && r === radicalOf(target);
+  });
+  takeFromLayer(() => true);
+
+  return chosen;
 }
