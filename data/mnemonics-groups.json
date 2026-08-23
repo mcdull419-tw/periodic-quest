@@ -1,0 +1,338 @@
+[
+  {
+    "group": "1A",
+    "name": "鹼金族",
+    "chant": "請你讓佳如設法",
+    "mapping": [
+      {
+        "char": "請",
+        "z": 1,
+        "symbol": "H",
+        "zh": "氫"
+      },
+      {
+        "char": "你",
+        "z": 3,
+        "symbol": "Li",
+        "zh": "鋰"
+      },
+      {
+        "char": "讓",
+        "z": 11,
+        "symbol": "Na",
+        "zh": "鈉"
+      },
+      {
+        "char": "佳",
+        "z": 19,
+        "symbol": "K",
+        "zh": "鉀"
+      },
+      {
+        "char": "如",
+        "z": 37,
+        "symbol": "Rb",
+        "zh": "銣"
+      },
+      {
+        "char": "設",
+        "z": 55,
+        "symbol": "Cs",
+        "zh": "銫"
+      },
+      {
+        "char": "法",
+        "z": 87,
+        "symbol": "Fr",
+        "zh": "鍅"
+      }
+    ],
+    "scene": "一個叫佳如的女生站著想辦法",
+    "sceneNext": "2A"
+  },
+  {
+    "group": "2A",
+    "name": "鹼土金族",
+    "chant": "媲美蓋斯被雷",
+    "mapping": [
+      {
+        "char": "媲",
+        "z": 4,
+        "symbol": "Be",
+        "zh": "鈹"
+      },
+      {
+        "char": "美",
+        "z": 12,
+        "symbol": "Mg",
+        "zh": "鎂"
+      },
+      {
+        "char": "蓋",
+        "z": 20,
+        "symbol": "Ca",
+        "zh": "鈣"
+      },
+      {
+        "char": "斯",
+        "z": 38,
+        "symbol": "Sr",
+        "zh": "鍶"
+      },
+      {
+        "char": "被",
+        "z": 56,
+        "symbol": "Ba",
+        "zh": "鋇"
+      },
+      {
+        "char": "雷",
+        "z": 88,
+        "symbol": "Ra",
+        "zh": "鐳"
+      }
+    ],
+    "scene": "佳如想著被雷劈到的蓋斯",
+    "sceneNext": "3A"
+  },
+  {
+    "group": "3A",
+    "name": "硼族",
+    "chant": "朋屢嫁英他",
+    "mapping": [
+      {
+        "char": "朋",
+        "z": 5,
+        "symbol": "B",
+        "zh": "硼"
+      },
+      {
+        "char": "屢",
+        "z": 13,
+        "symbol": "Al",
+        "zh": "鋁"
+      },
+      {
+        "char": "嫁",
+        "z": 31,
+        "symbol": "Ga",
+        "zh": "鎵"
+      },
+      {
+        "char": "英",
+        "z": 49,
+        "symbol": "In",
+        "zh": "銦"
+      },
+      {
+        "char": "他",
+        "z": 81,
+        "symbol": "Tl",
+        "zh": "鉈"
+      }
+    ],
+    "scene": "朋友屢次搭飛機嫁到英國去",
+    "sceneNext": "4A"
+  },
+  {
+    "group": "4A",
+    "name": "碳族",
+    "chant": "嘆息著西遷",
+    "mapping": [
+      {
+        "char": "嘆",
+        "z": 6,
+        "symbol": "C",
+        "zh": "碳"
+      },
+      {
+        "char": "息",
+        "z": 14,
+        "symbol": "Si",
+        "zh": "矽"
+      },
+      {
+        "char": "著",
+        "z": 32,
+        "symbol": "Ge",
+        "zh": "鍺"
+      },
+      {
+        "char": "西",
+        "z": 50,
+        "symbol": "Sn",
+        "zh": "錫"
+      },
+      {
+        "char": "遷",
+        "z": 82,
+        "symbol": "Pb",
+        "zh": "鉛"
+      }
+    ],
+    "scene": "嘆著氣往西邊遷徙",
+    "sceneNext": "5A"
+  },
+  {
+    "group": "5A",
+    "name": "氮族",
+    "chant": "但你身體病",
+    "mapping": [
+      {
+        "char": "但",
+        "z": 7,
+        "symbol": "N",
+        "zh": "氮"
+      },
+      {
+        "char": "你",
+        "z": 15,
+        "symbol": "P",
+        "zh": "磷"
+      },
+      {
+        "char": "身",
+        "z": 33,
+        "symbol": "As",
+        "zh": "砷"
+      },
+      {
+        "char": "體",
+        "z": 51,
+        "symbol": "Sb",
+        "zh": "銻"
+      },
+      {
+        "char": "病",
+        "z": 83,
+        "symbol": "Bi",
+        "zh": "鉍"
+      }
+    ],
+    "scene": "但你身體生病了",
+    "sceneNext": "6A"
+  },
+  {
+    "group": "6A",
+    "name": "氧族",
+    "chant": "楊柳溪地破",
+    "mapping": [
+      {
+        "char": "楊",
+        "z": 8,
+        "symbol": "O",
+        "zh": "氧"
+      },
+      {
+        "char": "柳",
+        "z": 16,
+        "symbol": "S",
+        "zh": "硫"
+      },
+      {
+        "char": "溪",
+        "z": 34,
+        "symbol": "Se",
+        "zh": "硒"
+      },
+      {
+        "char": "地",
+        "z": 52,
+        "symbol": "Te",
+        "zh": "碲"
+      },
+      {
+        "char": "破",
+        "z": 84,
+        "symbol": "Po",
+        "zh": "釙"
+      }
+    ],
+    "scene": "楊柳樹下的小溪，地被水沖破",
+    "sceneNext": "7A"
+  },
+  {
+    "group": "7A",
+    "name": "鹵素",
+    "chant": "浮綠秀點鱷",
+    "mapping": [
+      {
+        "char": "浮",
+        "z": 9,
+        "symbol": "F",
+        "zh": "氟"
+      },
+      {
+        "char": "綠",
+        "z": 17,
+        "symbol": "Cl",
+        "zh": "氯"
+      },
+      {
+        "char": "秀",
+        "z": 35,
+        "symbol": "Br",
+        "zh": "溴"
+      },
+      {
+        "char": "點",
+        "z": 53,
+        "symbol": "I",
+        "zh": "碘"
+      },
+      {
+        "char": "鱷",
+        "z": 85,
+        "symbol": "At",
+        "zh": "砈"
+      }
+    ],
+    "scene": "溪裡浮著一隻綠色的鱷魚",
+    "sceneNext": "8A"
+  },
+  {
+    "group": "8A",
+    "name": "惰性氣體",
+    "chant": "害乃亞克先動",
+    "mapping": [
+      {
+        "char": "害",
+        "z": 2,
+        "symbol": "He",
+        "zh": "氦"
+      },
+      {
+        "char": "乃",
+        "z": 10,
+        "symbol": "Ne",
+        "zh": "氖"
+      },
+      {
+        "char": "亞",
+        "z": 18,
+        "symbol": "Ar",
+        "zh": "氬"
+      },
+      {
+        "char": "克",
+        "z": 36,
+        "symbol": "Kr",
+        "zh": "氪"
+      },
+      {
+        "char": "先",
+        "z": 54,
+        "symbol": "Xe",
+        "zh": "氙"
+      },
+      {
+        "char": "動",
+        "z": 86,
+        "symbol": "Rn",
+        "zh": "氡"
+      }
+    ],
+    "scene": "乃亞克被鱷魚嚇到先動了",
+    "sceneNext": null
+  }
+]
