@@ -1,7 +1,7 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-23
-**目前位置：** 執行中，分支 `feat/plan-1-core`。已完成 10/18，下一步是 Task 2.5
+**目前位置：** 分支 `feat/plan-1-core`。已完成 10/18。**Task 2.5 進行中**——實作與修正都已 commit（`0aed820`，14 tests 全過），但 scoped re-review 尚未跑。
 
 ---
 
@@ -72,7 +72,7 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 - [x] 2.2 Leitner 複習排程 — Sonnet（`4070dbd..120ce63`，17 tests）
 - [x] 2.3 出題來源與抽題權重 — Sonnet（`8c957f2..1dba854`，7 tests）
 - [x] 2.4 干擾選項 — Sonnet（`687a93c..8363c61`，6 tests）
-- [ ] 2.5 題目生成與判分 — Sonnet
+- [~] 2.5 題目生成與判分 — Sonnet（`691a8ab`+`0aed820`，14 tests；**待複審**）
 - [ ] 2.6 進度與關卡解鎖 — Sonnet
 
 ### Phase 3：最小可用介面
@@ -90,17 +90,40 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 2.5：題目生成與判分**
+**先收尾 Task 2.5：跑 scoped re-review**
 
-注意：呼叫 `buildDistractors` 時傳入的 `allElements` 必須限縮到已解鎖關卡的
-元素，否則氦的干擾項會出現 Og（118 號超重元素）。用 Task 2.3 的
-`availableElements(stages, unlockedStages)` 取得範圍。
+實作與修正都已 commit 且 14 個測試全過，但複審還沒跑完。diff 已備妥在
+`.superpowers/sdd/2026-08-23-periodic-quest-core/review-691a8ab..0aed820.diff`。
+
+複審重點：新的重試測試是否真的走到「`makeQuestion` 回傳 `null` 後重試」的
+分支（而非碰巧通過）；`table-locate` 的測試是否確實驗證 period 與 group
+兩者皆須相符。
+
+**複審通過後接 Task 2.6：進度與關卡解鎖**，那是 Phase 2 的最後一個。
+
+### Phase 2 留給 Phase 3 的三個約束
+
+1. 呼叫 `buildDistractors` 時傳入的 `allElements` **必須限縮到已解鎖關卡**，
+   否則氦的干擾項會抽到 Og（118 號超重元素）。用
+   `availableElements(stages, unlockedStages)` 取範圍。
+2. `buildPools` 的三個池**聯集不等於** `availableZ`——已學過、不到期、
+   弱項排名在 `weakLimit` 之外的卡三池都不會出現。不可假設等於全部。
+3. `buildDistractors` 對 `target` 為 `null` **沒有防呆**，呼叫端要保證合法。
+
+### 測試指令有變
+
+`js/core/quiz.js` 已拆成 `quiz.js`（池與權重）+ `question.js`（題目生成與判分），
+所以測試要多帶一個來源檔：
+
+```
+python3 tests/run.py js/core/scheduler.js js/core/quiz.js js/core/question.js tests/quiz-question.test.js
+```
 
 Phase 1 已全部完成，資料層就緒。`data/` 底下三個檔（elements、mnemonics-groups、
 stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗確認會失敗：
 118 筆中文名對照表、中文名重複檢查、44 筆口訣交叉比對。
 
-目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、`quiz-pool` 7、`quiz-distractor` 6。
+目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 14。合計 **90**。
 
 ## 執行期裁決（計畫的修正，覆寫計畫原文）
 
