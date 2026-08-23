@@ -19,8 +19,21 @@ const DATA = {
       { char: '讓', z: 11, symbol: 'Na', zh: '鈉' }
     ]
   }],
-  stages: [{ id: 1, name: 'A', groups: ['1A'], elements: [1, 3, 11] }]
+  // 第二關只有鐵（過渡金屬，沒有主族、沒有口訣），
+  // 專門用來驗證 nextQuestion 遇到不適用題型時會換題型重試。
+  stages: [
+    { id: 1, name: 'A', groups: ['1A'], elements: [1, 3, 11] },
+    { id: 2, name: 'B', groups: [], elements: [26] }
+  ]
 };
+
+// 依序回放固定的亂數序列，讓 nextQuestion 內每一次 rng() 呼叫的結果
+// 都可控——用來精確逼出「shuffle(QUESTION_TYPES) 後第一個是 chant-blank」
+// 這種原本要跑很多次才會遇到的情境。序列用完後重複最後一個值。
+function queueRng(values) {
+  let i = 0;
+  return () => values[Math.min(i++, values.length - 1)];
+}
 
 test('symbol-to-zh 的題幹是符號，選項含正解', () => {
   const q = makeQuestion('symbol-to-zh', 11, DATA, () => 0);
@@ -58,6 +71,44 @@ test('group-id 問元素屬於哪一族', () => {
 
 test('沒有口訣的元素不會產生 chant-blank 題', () => {
   eq(makeQuestion('chant-blank', 26, DATA, () => 0), null);
+});
+
+test('table-locate 的 answer 為 period 與 group 座標，且沒有選項', () => {
+  const q = makeQuestion('table-locate', 11, DATA, () => 0);
+  eq(q.prompt, 'Na');
+  eq(q.options, null);
+  eq(q.answer, { period: 3, group: 1 });
+});
+
+test('checkAnswer 對 table-locate 要求 period 與 group 皆相符', () => {
+  const q = makeQuestion('table-locate', 11, DATA, () => 0);
+  eq(checkAnswer(q, { period: 3, group: 1 }).correct, true);
+  // 只有 period 對：group 錯仍算錯
+  eq(checkAnswer(q, { period: 3, group: 2 }).correct, false);
+  // 只有 group 對：period 錯仍算錯
+  eq(checkAnswer(q, { period: 4, group: 1 }).correct, false);
+  eq(checkAnswer(q, { period: 3, group: 1 }).correctAnswer, { period: 3, group: 1 });
+});
+
+// 官方 fixture 原本的三個主族元素（H／Li／Na）七種題型全部適用，
+// makeQuestion 永不回傳 null，nextQuestion 的重試分支因此從未被執行到
+// ——這是 code review 找出的測試盲點。這裡用固定 rng 序列精確逼出
+// 「shuffle(QUESTION_TYPES) 後第一個是 chant-blank」，目標元素是鐵
+// （關卡 2，mainGroup: null，沒有口訣），驗證 nextQuestion 真的會換
+// 下一個題型重試，而不是直接放棄回傳 null。
+test('nextQuestion 換題型重試：過渡金屬先抽到 chant-blank 仍能拿到合法題目', () => {
+  // 呼叫序：pickSource(1) → 選 z 的索引(1) → shuffle(QUESTION_TYPES) 的
+  // 6 次 Fisher-Yates 迭代（i = 6..1）。這組序列讓前兩次呼叫的結果不影響
+  // 結論（關卡 2 只有鐵一個元素可選），後六次刻意讓 shuffle 後陣列的
+  // 第 0 個元素固定是 QUESTION_TYPES 原本索引 5 的 'chant-blank'。
+  const rng = queueRng([0.5, 0.5, 0.9, 0.0, 0.9, 0.9, 0.9, 0.9]);
+  const q = nextQuestion(
+    { cards: [], stages: DATA.stages, unlockedStages: [2], data: DATA, now: 0 },
+    rng
+  );
+  ok(q !== null, 'nextQuestion 應該換題型重試，不是直接放棄回傳 null');
+  eq(q.z, 26);
+  ok(q.type !== 'chant-blank', '第一個抽到的 chant-blank 對鐵不適用，應該已經換成別的題型');
 });
 
 test('checkAnswer 對選擇題做精確比對', () => {
