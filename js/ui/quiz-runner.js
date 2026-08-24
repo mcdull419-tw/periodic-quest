@@ -22,6 +22,18 @@ const DEFAULT_LIMIT = 20;
 // 不是完整歷史，無上限成長只會把 localStorage 撐爆。
 const MAX_SESSIONS = 30;
 
+// 一輪之內，最近考過的幾個元素不要再考。
+//
+// 為什麼需要這個：答錯的卡會被 reviewCard 退回第 1 盒且 nextDue = now，
+// 也就是立刻到期；而到期池的抽題權重是 60%。幾題之後到期池往往只剩
+// 「剛剛答錯的那一兩個」，於是整輪測驗會反覆轟炸同一個元素——實測
+// 曾出現連續 16 題都在考同一個。這是 Leitner 規則在單一輪次內的副作用，
+// 不是 core 的錯（隔天再複習時「立刻到期」是對的），所以修在這一層。
+const RECENT_WINDOW = 3;
+
+// 重抽次數上限。到期卡真的只剩一張時重複無可避免，不能無限迴圈。
+const PICK_ATTEMPTS = 12;
+
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -83,10 +95,10 @@ export function runQuiz(container, options) {
     const wrongZ = [];
     let current = null;
     let shownAt = 0;
-    // 上一題考的原子序。同一個元素連續考兩次會讓人以為當掉了，
-    // 取到重複的就再抽——但只抽有限次，因為到期卡只剩一張時
-    // 重複是必然的，不能無限迴圈。
-    let lastZ = null;
+    // 最近考過的原子序（最多 RECENT_WINDOW 個）。
+    const recent = [];
+    // 回饋訊息要插進來的位置（作答區與「結束這一輪」之間）
+    let feedbackSlot = null;
     // table-locate 題的週期表容器。答完要在原地換成 browse 模式標出正解，
     // 而不是在下面再畫一張——兩張 118 格的表疊著看會很吵。
     let locateHost = null;
@@ -103,13 +115,14 @@ export function runQuiz(container, options) {
         now: Date.now()
       };
       current = pickQuestion(ctx);
-      for (let i = 0; current && current.z === lastZ && i < 5; i++) {
+      for (let i = 0; current && recent.indexOf(current.z) >= 0 && i < PICK_ATTEMPTS; i++) {
         const retry = pickQuestion(ctx);
         if (!retry) break;
         current = retry;
       }
       if (!current) { drawEmpty(); return; }
-      lastZ = current.z;
+      recent.push(current.z);
+      if (recent.length > RECENT_WINDOW) recent.shift();
       shownAt = Date.now();
       drawQuestion();
     }
@@ -134,6 +147,7 @@ export function runQuiz(container, options) {
     function drawQuestion() {
       body.innerHTML = '';
       locateHost = null;
+      feedbackSlot = null;
       body.appendChild(el('p', 'muted', `第 ${answered + 1} 題 / 共 ${limit} 題`));
       // 題幹常常只是一個符號或一個數字（例如「1」），沒有指示語學生
       // 看不出要答什麼。指示語由 core 提供，與題型一對一登記。
@@ -151,6 +165,12 @@ export function runQuiz(container, options) {
         body.appendChild(el('p', 'muted error',
           `題型「${current.type}」還沒有對應的作答方式，請回報這個問題。`));
       }
+
+      // 回饋與「下一題」要接在作答區正下方，所以先放一個插入點；
+      // 「結束這一輪」永遠留在最底下。之前直接 append 到 body 末端，
+      // 結果答完之後回饋跑到「結束這一輪」下面去，閱讀順序是亂的。
+      feedbackSlot = el('div');
+      body.appendChild(feedbackSlot);
 
       const quit = el('button', 'btn btn-quiet', '結束這一輪');
       quit.type = 'button';
@@ -248,10 +268,11 @@ export function runQuiz(container, options) {
     }
 
     function drawFeedback(correct, correctAnswer) {
+      const slot = feedbackSlot || body;
       const text = correct
         ? '答對了'
         : `答錯了，正解是「${formatAnswer(correctAnswer)}」`;
-      body.appendChild(el('p', correct ? 'feedback is-correct' : 'feedback is-wrong', text));
+      slot.appendChild(el('p', correct ? 'feedback is-correct' : 'feedback is-wrong', text));
 
       // 答完 table-locate 要讓學生看見正解在表上的哪一格，光給座標數字
       // 記不起來。在原本那張表的位置切回 browse 模式並把那一格捲進畫面。
@@ -264,7 +285,7 @@ export function runQuiz(container, options) {
 
       // 大小寫是符號題最常見的錯法，答對也提醒一次，強化規則。
       if (current.type === 'symbol-spell') {
-        body.appendChild(el('p', 'muted',
+        slot.appendChild(el('p', 'muted',
           '符號的寫法：第一個字母大寫，第二個字母小寫（例如 Na 不是 NA 或 na）。'));
       }
 
@@ -273,14 +294,15 @@ export function runQuiz(container, options) {
       if (groupDef) {
         const line = el('p', 'muted');
         line.textContent = `${groupDef.name}口訣：${groupDef.chant}`;
-        body.appendChild(line);
+        slot.appendChild(line);
       }
 
       const next = el('button', 'btn btn-primary',
         answered >= limit ? '看結果' : '下一題');
       next.type = 'button';
       next.onclick = nextRound;
-      body.appendChild(next);
+      slot.appendChild(next);
+      next.scrollIntoView({ block: 'nearest' });
     }
 
     function formatAnswer(value) {
