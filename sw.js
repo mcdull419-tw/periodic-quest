@@ -9,7 +9,7 @@
 // （例如 pq-v1 -> pq-v2），舊快取會在新 Service Worker activate 時被清掉，
 // 學生就不會卡在舊版本、看到過期內容。
 
-const CACHE_VERSION = "pq-v4";
+const CACHE_VERSION = "pq-v5";
 
 // 開發期間會持續新增檔案（data/*.json、js/ui/*.js 等），這裡只預先快取
 // PWA 外殼本身一定需要的固定檔案；其餘檔案在第一次造訪時由 fetch 事件
@@ -66,9 +66,24 @@ self.addEventListener("activate", (event) => {
 const NETWORK_TIMEOUT_MS = 3000;
 
 function fromNetwork(request) {
+  // 用 cache: "no-cache" 重建一個等價請求。
+  //
+  // 這一行是踩過坑才加的：改成 network-first 之後，部署新版仍然看到舊
+  // 畫面。原因是 fetch() 預設會吃瀏覽器自己的 HTTP 快取，而 GitHub Pages
+  // 對靜態檔送 max-age=600——SW 以為自己去了網路，其實拿回來的是十分鐘
+  // 內的舊檔。實測同一頁裡用 no-store 抓到新版、走一般路徑抓到舊版。
+  //
+  // no-cache 不是「不快取」，是「一定向伺服器驗證」：帶 ETag 去問，
+  // 沒變就回 304，幾乎沒有額外成本，但保證不會拿到過期的檔案。
+  // 更糟的情況是新舊檔混用——部分模組是新的、部分是舊的，那種壞法
+  // 極難重現。
+  const revalidated = new Request(request.url, {
+    cache: "no-cache",
+    credentials: "same-origin"
+  });
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("timeout")), NETWORK_TIMEOUT_MS);
-    fetch(request).then(
+    fetch(revalidated).then(
       (response) => { clearTimeout(timer); resolve(response); },
       (err) => { clearTimeout(timer); reject(err); }
     );
