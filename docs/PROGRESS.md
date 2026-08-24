@@ -1,8 +1,12 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-24
-**目前位置：** 分支 `feat/plan-1-core`。已完成 12/18，**Phase 2 結束，核心邏輯全部就緒**。
-下一步是 Task 3.1（Phase 3 的第一個，開始寫介面）。
+**目前位置：** 分支 `feat/plan-1-core`。已完成 14/18。Phase 3 做到 3.2，
+下一步是 **Task 3.3 記憶法教學畫面**。
+
+**部署已提前：** GitHub repo 為 `mcdull419-tw/periodic-quest`，Task 4.2 的
+GitHub Pages 部分提前到 Phase 3 進行中做，因為使用者不在家時需要能看畫面
+驗收（本機 `localhost:8000` 只有 Mac 上開得起來，區網位址出了家門就沒用）。
 
 ---
 
@@ -77,8 +81,9 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 - [x] 2.6 進度與關卡解鎖 — Opus（`d572a88`，16 tests；串真實 fixture 時 18）
 
 ### Phase 3：最小可用介面
-- [ ] 3.1 互動式週期表元件 — Sonnet
-- [ ] 3.2 週期表查詢畫面 — Sonnet
+- [x] 3.1 互動式週期表元件 — Opus（`944bc90`，瀏覽器內 16 項檢查）
+- [x] 3.2 週期表查詢畫面 — Opus（`acd7969`..`e63d575`）
+- [+] 3.2b 118 個元素的注音 — Opus（`acd7969`，計畫外的追加需求）
 - [ ] 3.3 記憶法教學畫面 — Sonnet
 - [ ] 3.4 測驗畫面 — Sonnet
 - [ ] 3.5 首頁、複習入口與導覽 — Sonnet
@@ -91,15 +96,23 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 3.1：互動式週期表元件**（`docs/superpowers/plans/2026-08-23-periodic-quest-core.md`）
+**Task 3.3：記憶法教學畫面**（`docs/superpowers/plans/2026-08-23-periodic-quest-core.md`）
 
-Phase 3 的驗證方式與前面不同：`js/ui/` 不寫自動化測試，改為在
-`python3 -m http.server 8000` 下用瀏覽器人工確認。每個 task 的 brief
-都列了明確的人工驗收項目。**但這台機器目前沒有可操作的瀏覽器**
-（有 Safari／Chrome，但 `claude-in-chrome` 擴充功能未連線），
-所以 Phase 3 的「人工驗收」實際上做不到。開始 Task 3.1 之前先確認：
-要嘛請使用者自己開瀏覽器看，要嘛接受「只驗證到 HTTP 層」並如實記錄。
-不要寫成「已驗收」。
+### Phase 3 的驗收怎麼做（已與使用者確認）
+
+`js/ui/` 不寫自動化測試，改為使用者自己在瀏覽器看。這台機器沒有可操作的
+瀏覽器（`claude-in-chrome` 未連線），Claude 不能自己驗收，**不得把未經
+人眼確認的東西寫成「已驗收」**。
+
+能自動驗的部分要盡量自動驗：`tests/preview-table.html` 的做法是在頁面裡
+放一組跑在真實瀏覽器 DOM 上的檢查（格數、座標、尺寸、捲動、互動、
+class 狀態），列出 PASS/FAIL，剩下顏色與美感才交給人眼。新畫面照這個
+模式做。
+
+**本機伺服器踩過的坑：** 使用者的 Mac 上 `localhost:8000` 開不起來
+（curl 從 IPv4／IPv6 都通、無 proxy，所以是瀏覽器端問題，推測是 https
+自動升級或舊的 Service Worker），`127.0.0.1:8080` 是繞過用的乾淨來源。
+最終解法是走 GitHub Pages，見下。
 
 ### Phase 2 留給 Phase 3 的約束
 
@@ -120,6 +133,18 @@ Phase 3 的驗證方式與前面不同：`js/ui/` 不寫自動化測試，改為
    存的那份只當快取——兩者不一致時（例如改過 stages 資料）要以計算結果
    覆寫並存回。這件事還沒有人做，Task 3.5 接手時要處理。
 
+### 部署（Task 4.2 的一部分，提前做）
+
+- Repo：`https://github.com/mcdull419-tw/periodic-quest`（public）
+- Pages 網址：`https://mcdull419-tw.github.io/periodic-quest/`
+- `manifest.json` 的 `start_url` 與 `scope` 都是 `./`，`index.html`、
+  `sw.js`、`js/data/load.js` 也全用相對路徑，所以部署在子目錄不必改。
+- `sw.js` 只在 localhost／私有網段走 network-first，github.io 走
+  cache-first，離線功能不受影響。**每次改動 CORE_ASSETS 都要同步把
+  CACHE_VERSION 往上加**，否則學生會卡在舊快取。
+- 這台機器沒有 gh CLI、沒有 Homebrew、沒有 SSH 金鑰，`git push` 必須由
+  使用者本人執行（HTTPS + PAT，憑證會存進 osxkeychain）。
+
 ### 測試指令有變
 
 `js/core/quiz.js` 已拆成 `quiz.js`（池與權重）+ `question.js`（題目生成與判分），
@@ -133,8 +158,10 @@ Phase 1 已全部完成，資料層就緒。`data/` 底下三個檔（elements�
 stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗確認會失敗：
 118 筆中文名對照表、中文名重複檢查、44 筆口訣交叉比對。
 
-目前測試總數：`data` 23、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、
-`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 16、`progress` 16。合計 **108**。
+目前測試總數：`data` 25、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、
+`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 16、`progress` 16。合計 **110**
+（帶 fixture 跑 progress 時 112）。另有 `tests/preview-table.html` 的 16 項
+瀏覽器內檢查，那些不在上面的數字裡。
 
 一次跑完全部（`js/core/*.js` 串在一起不會撞名，已驗證）：
 
@@ -172,6 +199,16 @@ for t in tests/*.test.js; do printf "%-32s " "$t"; python3 tests/run.py js/core/
 - **Task 2.6 裁決**：計畫的介面清單外多匯出 `unlockRequirement(stage)`；
   `isStageUnlocked` 檢查「前面每一關」而非只看前一關；`unlockRatio`
   缺漏或非法時退回 0.8。理由見 `d572a88` 的 commit 訊息。
+- **Task 3.1 裁決**：計畫的檔案清單外，另外動了 `css/tokens.css`（新增十個
+  分類色 token，brief 要求「色值全部取自 tokens.css」但那些 token 原本不存在）、
+  `index.html`／`sw.js`（掛上新 CSS），並新增 `tests/preview-table.html`
+  ——Task 3.1 只產出元件，App 裡還沒有畫面掛載它，沒有這頁就沒有東西可驗收。
+- **Task 3.2 裁決**：新增 `css/screens.css` 供 Phase 3 五個畫面共用；
+  `sw.js` 在 localhost／私有網段改走 network-first；週期表元件的
+  「整族高亮」與「選取單一格」拆成兩種視覺（is-highlight／is-selected）。
+- **計畫外追加：注音**（使用者要求）。資料來源與判讀方式見下方〈資料正確性
+  的守護機制〉。UI 上詳細面板必顯示，格子則由「顯示注音」開關控制，
+  狀態存在 `settings.showZhuyin`。
 - **Task 0.2 裁決**：`js/main.js` 的路由除了 brief 要求的 `#name` 形式，
   額外支援 `#name?key=value` 查詢參數解析（`navigate(name, params)` /
   `registerScreen(name, (container, params) => void)`）。這是 Task 3.3
@@ -187,10 +224,28 @@ for t in tests/*.test.js; do printf "%-32s " "$t"; python3 tests/run.py js/core/
 `validateElements` 另有**中文名重複檢查**——這條不需要知道正確答案就能抓出
 一整類抄錯（例如兩個原子序被填成同一個字）。
 
-**一個未解的爭議：** z=61 Pm 目前是「鉕」。一位 reviewer 把參考圖放大 9× 後
-認為可能是「鉅」，但它自己也說沒把握、且牴觸其對台灣標準用字的認知。
-裁決維持「鉕」（國家教育研究院樂詞網用字）。若日後有更高解析度的來源，
-值得覆核這一格。
+**原本的爭議已結案：** z=61 Pm 是否為「鉕」的疑問，由 `reference/` 那本
+《中學生眼中的化學元素週期表》第 76 頁的 PDF 文字層直接證實——該頁寫著
+「鉕」、注音 ㄆㄛˇ，機器可讀，不是放大猜的。維持「鉕」。
+
+### 注音的來源與可信度（動 zhuyin 欄位前必讀）
+
+`tests/data.test.js` 另有一份 **118 筆的注音對照表**，同樣鎖定現狀。
+資料來源與中文名是同一本書，但取得方式分兩種，對照表裡逐筆註明：
+
+- **65 筆**由 PDF 文字層直接帶出音節與聲調，可信度最高。
+- **53 筆**的聲調符號完全不在文字層裡（字型子集沒有 ToUnicode 對照，
+  整頁掃不到任何 ˊˇˋ˙），是把該頁算繪成 PNG 後用眼睛判讀的。判讀前先用
+  六個文字層已知聲調的元素校準符號長相（ˊ 右上撇、ˋ 右下點、ˇ 打勾）。
+- 上述 53 筆裡有 **5 筆**讀音與一般認知不同，另外拿使用者提供的一張
+  注音週期表交叉比對，兩來源一致才寫入：
+  **氬 ㄧㄚˇ、鈷 ㄍㄨ、鎝 ㄊㄚˇ、鈀 ㄅㄚ、鏑 ㄉㄧ**
+  （直覺會以為是 ㄧㄚˋ／ㄍㄨˇ／ㄊㄚˋ／ㄅㄚˇ／ㄉㄧˊ）。
+  兩本台灣出版品都這樣印，以來源為準。**若學生的課本印法不同，
+  這五格是最該優先覆核的。**
+
+一聲不標符號，是台灣標準寫法，不是漏標。`validateElements` 另有
+「必須是單一注音音節」的格式檢查（元素中文名都是單字，兩個音節必定是抄錯）。
 
 ## 已知的待處理小問題
 
