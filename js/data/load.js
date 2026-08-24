@@ -11,14 +11,16 @@
 const FILES = {
   elements: 'data/elements.json',
   groups: 'data/mnemonics-groups.json',
-  stages: 'data/stages.json'
+  stages: 'data/stages.json',
+  elementMnemonics: 'data/mnemonics-elements.json'
 };
 
 let cache = null;
 
 /**
  * 載入三份資料檔。重複呼叫共用同一次請求。
- * @returns {Promise<{ elements: object[], groups: object[], stages: object[] }>}
+ * @returns {Promise<{ elements: object[], groups: object[], stages: object[],
+ *                     elementMnemonics: object[] }>}
  */
 export function loadData() {
   if (cache) return cache;

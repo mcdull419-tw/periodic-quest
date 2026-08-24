@@ -32,6 +32,7 @@ def generate_js():
     elements = load_json("elements.json")
     groups = load_json("mnemonics-groups.json")
     stages = load_json("stages.json")
+    element_mnemonics = load_json("mnemonics-elements.json")
 
     js_content = f"""// 自動產生的資料夾樣本，供測試使用
 // 由 tests/make-data-fixture.py 產生，不進版控
@@ -41,6 +42,8 @@ var ELEMENTS = {json.dumps(elements, ensure_ascii=False, indent=2)};
 var GROUPS = {json.dumps(groups, ensure_ascii=False, indent=2)};
 
 var STAGES = {json.dumps(stages, ensure_ascii=False, indent=2)};
+
+var ELEMENT_MNEMONICS = {json.dumps(element_mnemonics, ensure_ascii=False, indent=2)};
 """
 
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:

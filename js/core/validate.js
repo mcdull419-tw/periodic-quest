@@ -205,3 +205,57 @@ export function validateStages(stages, elements) {
 
   return errors;
 }
+
+// hook 的字數上限（spec §5.2.3）。這是給國中生在詳細面板上一眼掃過的
+// 一句話，不是說明文字——超過就不會有人讀。
+export const HOOK_MAX_LENGTH = 12;
+
+/**
+ * 驗證個別元素的圖像掛鉤資料。
+ *
+ * 這份資料之後會由 sub-agent 依關卡分批量產（spec §11.4），所以規則要
+ * 明確到機器可檢查：批次產出的東西沒有守門就進資料庫，等於把品質賭在
+ * 每一次派工的 prompt 上。字數、重複、對不對得上元素這三類錯誤最常見，
+ * 也最容易在人工檢視時漏看。
+ *
+ * @param {Array<object>} mnemonics
+ * @param {Array<object>} elements 用來確認 z 真的存在
+ * @returns {string[]} 錯誤訊息陣列，空陣列代表通過。
+ */
+export function validateElementMnemonics(mnemonics, elements) {
+  const errors = [];
+  const byZ = new Map((elements || []).map(el => [el.z, el]));
+  const seenZ = new Set();
+
+  (mnemonics || []).forEach((item, index) => {
+    if (!item || typeof item !== 'object') {
+      errors.push(`掛鉤 #${index}：資料不可為 null 或 undefined`);
+      return;
+    }
+
+    const label = `掛鉤 #${index}（z=${item.z}）`;
+
+    if (!Number.isInteger(item.z) || !byZ.has(item.z)) {
+      errors.push(`${label}：z 在 elements 資料中找不到`);
+    } else if (seenZ.has(item.z)) {
+      errors.push(`元素 z=${item.z}：圖像掛鉤重複定義`);
+    } else {
+      seenZ.add(item.z);
+    }
+
+    if (typeof item.imagery !== 'string' || item.imagery.trim().length === 0) {
+      errors.push(`${label}：imagery 不可為空`);
+    }
+
+    if (typeof item.hook !== 'string' || item.hook.trim().length === 0) {
+      errors.push(`${label}：hook 不可為空`);
+    } else if (Array.from(item.hook).length > HOOK_MAX_LENGTH) {
+      errors.push(
+        `${label}：hook「${item.hook}」有 ${Array.from(item.hook).length} 字，` +
+        `超過 ${HOOK_MAX_LENGTH} 字上限`
+      );
+    }
+  });
+
+  return errors;
+}

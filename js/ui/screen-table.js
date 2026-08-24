@@ -74,9 +74,10 @@ function row(label, value) {
  * @param {object} el
  * @param {object[]} groups
  * @param {object} state
+ * @param {object[]} elementMnemonics 個別圖像掛鉤，目前只有 1A 的七筆
  * @returns {HTMLElement}
  */
-function renderDetail(el, groups, state) {
+function renderDetail(el, groups, state, elementMnemonics) {
   const panel = document.createElement('section');
   panel.className = 'card detail';
   panel.setAttribute('aria-live', 'polite');
@@ -132,6 +133,25 @@ function renderDetail(el, groups, state) {
     }
   }
 
+  // 個別圖像掛鉤。目前只有 1A 的七個元素有（spec §11.4 先驗證再量產），
+  // 沒有的元素整個區塊不出現——不要留一個空框，那看起來像壞掉。
+  const mnemonic = (elementMnemonics || []).find(m => m && m.z === el.z);
+  if (mnemonic) {
+    const title = document.createElement('h3');
+    title.className = 'detail-subtitle';
+    title.textContent = '這樣記';
+
+    const hook = document.createElement('p');
+    hook.className = 'hook';
+    hook.textContent = mnemonic.hook;
+
+    const imagery = document.createElement('p');
+    imagery.className = 'imagery';
+    imagery.textContent = mnemonic.imagery;
+
+    panel.append(title, hook, imagery);
+  }
+
   // 學習記錄。沒學過就明講「尚未學習」，不要留白或印出 undefined。
   const card = cardOf(state, el.z);
   const progress = document.createElement('p');
@@ -160,7 +180,7 @@ export function renderTableScreen(container, params) {
 
   container.append(title, loading);
 
-  loadData().then(({ elements, groups }) => {
+  loadData().then(({ elements, groups, elementMnemonics }) => {
     loading.remove();
 
     let state = loadState(localStorage);
@@ -251,7 +271,7 @@ export function renderTableScreen(container, params) {
         return;
       }
       const el = elements.find(e => e.z === selectedZ);
-      if (el) detailSlot.appendChild(renderDetail(el, groups, state));
+      if (el) detailSlot.appendChild(renderDetail(el, groups, state, elementMnemonics));
     }
 
     function draw() {

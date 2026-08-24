@@ -426,3 +426,19 @@
   opacity: 0.45;
   cursor: default;
 }
+
+/* ---- 個別元素的圖像掛鉤（Task 4.1） ------------------------------------ */
+
+/* hook 是一句話結論，要能被一眼掃到，所以給它跟口訣同等的視覺份量 */
+.hook {
+  margin: 4px 0;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--accent-2);
+}
+
+.imagery {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
