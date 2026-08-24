@@ -10,7 +10,7 @@
 import { loadData } from '../data/load.js';
 import { renderPeriodicTable } from '../components/periodic-table.js';
 import { renderZhuyin } from '../components/zhuyin.js';
-import { checkAnswer } from '../core/question.js';
+import { checkAnswer, ANSWER_MODES, QUESTION_PROMPTS } from '../core/question.js';
 import { newCard, reviewCard } from '../core/scheduler.js';
 import { computeUnlockedStages } from '../core/progress.js';
 import { loadState, saveState, upsertCard } from '../core/store.js';
@@ -83,6 +83,10 @@ export function runQuiz(container, options) {
     const wrongZ = [];
     let current = null;
     let shownAt = 0;
+    // 上一題考的原子序。同一個元素連續考兩次會讓人以為當掉了，
+    // 取到重複的就再抽——但只抽有限次，因為到期卡只剩一張時
+    // 重複是必然的，不能無限迴圈。
+    let lastZ = null;
     // table-locate 題的週期表容器。答完要在原地換成 browse 模式標出正解，
     // 而不是在下面再畫一張——兩張 118 格的表疊著看會很吵。
     let locateHost = null;
@@ -99,7 +103,13 @@ export function runQuiz(container, options) {
         now: Date.now()
       };
       current = pickQuestion(ctx);
+      for (let i = 0; current && current.z === lastZ && i < 5; i++) {
+        const retry = pickQuestion(ctx);
+        if (!retry) break;
+        current = retry;
+      }
       if (!current) { drawEmpty(); return; }
+      lastZ = current.z;
       shownAt = Date.now();
       drawQuestion();
     }
@@ -125,11 +135,22 @@ export function runQuiz(container, options) {
       body.innerHTML = '';
       locateHost = null;
       body.appendChild(el('p', 'muted', `第 ${answered + 1} 題 / 共 ${limit} 題`));
+      // 題幹常常只是一個符號或一個數字（例如「1」），沒有指示語學生
+      // 看不出要答什麼。指示語由 core 提供，與題型一對一登記。
+      body.appendChild(el('p', 'quiz-ask', QUESTION_PROMPTS[current.type] || ''));
       body.appendChild(el('p', 'quiz-prompt', current.prompt));
 
-      if (current.type === 'symbol-spell') drawSpellInput();
-      else if (current.type === 'table-locate') drawLocateTable();
-      else drawChoices();
+      // 依 core 登記的作答方式分派，不要用「不是 A 也不是 B 就當 C」
+      // 去猜——漏掉一種型別就是一次當機（chant-blank 就這樣掛過）。
+      const mode = ANSWER_MODES[current.type];
+      if (mode === 'text') drawSpellInput();
+      else if (mode === 'table') drawLocateTable();
+      else if (mode === 'choice') drawChoices();
+      else {
+        // 未登記的題型：寧可顯示錯誤也不要靜悄悄畫出一個沒辦法作答的畫面。
+        body.appendChild(el('p', 'muted error',
+          `題型「${current.type}」還沒有對應的作答方式，請回報這個問題。`));
+      }
 
       const quit = el('button', 'btn btn-quiet', '結束這一輪');
       quit.type = 'button';

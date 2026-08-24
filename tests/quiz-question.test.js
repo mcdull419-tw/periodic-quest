@@ -20,12 +20,14 @@ const DATA = {
         { char: '讓', z: 11, symbol: 'Na', zh: '鈉' }
       ]
     },
-    // 以下三族只給族碼，沒有 chant／mapping：group-id 只用得到 group 欄位。
-    // 它們的存在是為了讓 group-id 有干擾項可抽——真實資料有八個主族，
-    // 只放 1A 的 fixture 會讓 group-id 的選項數失真。
-    { group: '2A', name: '鹼土族' },
-    { group: '6A', name: '氧族' },
-    { group: '7A', name: '鹵素' }
+    // 以下三族只給族碼與口訣，不給 mapping：
+    // group-id 只用得到 group 欄位，chant-blank 的干擾字只用得到 chant。
+    // 它們的存在有兩個理由——真實資料有八個主族，只放 1A 的 fixture 會讓
+    // group-id 的選項數失真；而 chant-blank 的干擾字必須取自別族的口訣，
+    // 沒有別族的 chant 就一個字都取不到。
+    { group: '2A', name: '鹼土族', chant: '媲美蓋斯被雷' },
+    { group: '6A', name: '氧族', chant: '楊柳溪地破' },
+    { group: '7A', name: '鹵素', chant: '浮綠秀點鱷' }
   ],
   // 第二關只有鐵（過渡金屬，沒有主族、沒有口訣），
   // 專門用來驗證 nextQuestion 遇到不適用題型時會換題型重試。
@@ -85,7 +87,7 @@ test('symbol-spell 是填空題，沒有選項', () => {
 });
 
 test('chant-blank 挖掉口訣中的一個字', () => {
-  const q = makeQuestion('chant-blank', 11, DATA, () => 0);
+  const q = makeQuestion('chant-blank', 11, DATA, () => 0.5);
   eq(q.answer, '讓');
   ok(q.prompt.indexOf('□') >= 0, '題幹應有空格符號');
   eq(q.prompt.length, '請你讓佳如設法'.length);
@@ -252,4 +254,49 @@ test('scopeToUnlocked 同時限縮元素與族代號', () => {
   const scoped = scopeToUnlocked(ctx);
   eq(scoped.elements.map(e => e.z).sort((a, b) => a - b), [1, 3, 11]);
   eq(scoped.groups.map(g => g.group), ['1A']);
+});
+
+// ---- core 對 UI 的契約 ----------------------------------------------------
+// 這幾條擋的是一個真的發生過的當機：chant-blank 的 options 是 null，
+// 而畫面寫成「不是填空也不是週期表就當選擇題」，對 null 呼叫 forEach
+// 直接拋例外，整頁空白、連結束按鈕都畫不出來。少登記一種題型就是一次
+// 當機，所以在這裡逐一鎖住。
+
+test('每一種題型都有登記作答方式與指示語', () => {
+  QUESTION_TYPES.forEach(type => {
+    ok(ANSWER_MODES[type], `${type} 沒有登記 ANSWER_MODES`);
+    ok(QUESTION_PROMPTS[type], `${type} 沒有登記 QUESTION_PROMPTS`);
+  });
+  eq(Object.keys(ANSWER_MODES).sort(), QUESTION_TYPES.slice().sort());
+  eq(Object.keys(QUESTION_PROMPTS).sort(), QUESTION_TYPES.slice().sort());
+});
+
+test('產出的題目符合自己登記的作答方式', () => {
+  const ctx = { cards: [], stages: DATA.stages, unlockedStages: [1], data: DATA, now: 0 };
+  const scoped = scopeToUnlocked(ctx);
+  QUESTION_TYPES.forEach(type => {
+    const q = makeQuestion(type, 11, scoped, () => 0.5);
+    if (!q) return; // 產不出來是合法的（由 nextQuestion 換題型）
+    const mode = ANSWER_MODES[type];
+    if (mode === 'choice') {
+      ok(Array.isArray(q.options), `${type} 登記為選擇題卻沒有 options`);
+      ok(q.options.length >= 2, `${type} 只有 ${q.options.length} 個選項`);
+      ok(q.options.indexOf(q.answer) >= 0, `${type} 的選項裡沒有正解`);
+    } else {
+      eq(q.options, null);
+    }
+  });
+});
+
+test('chant-blank 是選擇題，干擾字不能是題幹上看得到的字', () => {
+  const ctx = { cards: [], stages: DATA.stages, unlockedStages: [1], data: DATA, now: 0 };
+  const q = makeQuestion('chant-blank', 11, scopeToUnlocked(ctx), () => 0.5);
+  ok(q !== null, '第一關只解鎖 1A 時也要出得來');
+  eq(q.answer, '讓');
+  eq(q.options.length, 4);
+  ok(q.options.indexOf('讓') >= 0);
+  q.options.forEach(opt => {
+    if (opt === q.answer) return;
+    ok(q.prompt.indexOf(opt) < 0, `干擾字「${opt}」就印在題幹「${q.prompt}」上`);
+  });
 });

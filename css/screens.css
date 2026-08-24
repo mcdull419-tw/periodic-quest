@@ -259,10 +259,17 @@
 
 /* ---- 小測 -------------------------------------------------------------- */
 
+/* 指示語。字級比題幹小，但顏色用正文色不用次要色——它是「要答什麼」
+   的唯一說明，不是補充。 */
+.quiz-ask {
+  margin: var(--gap-sm) 0 4px;
+  font-size: var(--font-size-base);
+}
+
 .quiz-prompt {
   font-size: var(--font-size-xl);
   font-weight: 700;
-  margin: var(--gap-sm) 0 var(--gap);
+  margin: 0 0 var(--gap);
 }
 
 .quiz-options {

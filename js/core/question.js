@@ -43,6 +43,35 @@ export const QUESTION_TYPES = [
 // 選擇題干擾項數量：連正解共 4 個選項。
 const CHOICE_COUNT = 3;
 
+// 每種題型要用哪一種作答方式。這是 core 對 UI 的**契約**：UI 依這張表
+// 分派，不要自己用「不是 A 也不是 B 就當成 C」的方式猜。
+//
+// 會有這張表，是因為真的踩過：chant-blank 的 options 是 null，而畫面
+// 寫成「不是填空也不是週期表就當選擇題」，於是對 null 呼叫 forEach
+// 直接當掉，整個畫面空白、連結束按鈕都畫不出來。少一種型別就是一次
+// 當機，所以把對應關係明講出來，並用測試鎖住「每一種題型都有登記」。
+export const ANSWER_MODES = {
+  'symbol-to-zh': 'choice',
+  'zh-to-symbol': 'choice',
+  'z-to-element': 'choice',
+  'symbol-spell': 'text',
+  'table-locate': 'table',
+  'chant-blank': 'choice',
+  'group-id': 'choice'
+};
+
+// 題幹本身往往只有一個符號或一個數字（例如「1」），學生看不出要答什麼。
+// 每種題型配一句指示，跟題幹一起顯示。
+export const QUESTION_PROMPTS = {
+  'symbol-to-zh': '這個符號是哪一個元素？',
+  'zh-to-symbol': '這個元素的符號是什麼？',
+  'z-to-element': '這個原子序是哪一個元素？',
+  'symbol-spell': '請寫出這個元素的符號（第一個字母大寫）',
+  'table-locate': '在週期表上點出這個元素的位置',
+  'chant-blank': '口訣裡空掉的是哪一個字？',
+  'group-id': '這個元素屬於哪一族？'
+};
+
 /**
  * 把正解與干擾項洗牌成完整的選項陣列。
  * @param {any} correctValue
@@ -115,7 +144,7 @@ function makeTableLocate(el) {
 // mapping 陣列與 chant 字串逐字一一對應（第 i 個字對應 mapping[i]），
 // 這是資料本身的約定，不是這裡臨時推斷的規則。
 // 過渡金屬沒有 mainGroup、也就沒有對應口訣，回傳 null。
-function makeChantBlank(el, data) {
+function makeChantBlank(el, data, rng) {
   if (!el.mainGroup) return null;
   const groupDef = data.groups.find(g => g.group === el.mainGroup);
   if (!groupDef || !groupDef.chant) return null;
@@ -125,9 +154,32 @@ function makeChantBlank(el, data) {
   if (idx >= chars.length) return null;
   const answer = chars[idx];
   chars[idx] = '□';
+  const prompt = chars.join('');
+
+  // 干擾字取自**其他族**的口訣。不能取同一句口訣裡的字——那些字就印在
+  // 題幹上，學生用刪去法就能答對，題目等於白出。
+  //
+  // 取用 allGroups 而非 groups：groups 已被限縮到已解鎖範圍，第一關
+  // 只有 1A，取不到任何干擾字，chant-blank 就永遠出不來——而第一關
+  // 正是最需要練口訣的時候。干擾字只是一個字，不會洩漏未學的族。
+  const source = data.allGroups || data.groups;
+  const seen = {};
+  const pool = [];
+  source.forEach(g => {
+    if (g.group === el.mainGroup || !g.chant) return;
+    Array.from(g.chant).forEach(c => {
+      if (prompt.indexOf(c) >= 0 || c === answer || seen[c]) return;
+      seen[c] = true;
+      pool.push(c);
+    });
+  });
+  const distractors = shuffle(pool, rng).slice(0, CHOICE_COUNT);
+  if (distractors.length === 0) return null;
+
   return {
-    type: 'chant-blank', z: el.z, prompt: chars.join(''),
-    options: null, answer, groupRef: el.mainGroup
+    type: 'chant-blank', z: el.z, prompt,
+    options: buildOptions(answer, distractors, rng),
+    answer, groupRef: el.mainGroup
   };
 }
 
@@ -232,6 +284,10 @@ export function scopeToUnlocked(ctx) {
   return {
     elements: ctx.data.elements.filter(e => availableSet.has(e.z)),
     groups: ctx.data.groups.filter(g => groupRefs.has(g.group)),
+    // 未限縮的全部族別。目前只有 chant-blank 的干擾字用得到——它需要
+    // 別族口訣的字，而那不算洩漏未學內容（只是一個字）。其他題型一律
+    // 用限縮過的 groups。
+    allGroups: ctx.data.groups,
     stages: ctx.data.stages
   };
 }

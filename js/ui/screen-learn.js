@@ -9,7 +9,7 @@
 
 import { loadData } from '../data/load.js';
 import { renderZhuyin } from '../components/zhuyin.js';
-import { makeQuestion, checkAnswer } from '../core/question.js';
+import { makeQuestion, checkAnswer, QUESTION_PROMPTS } from '../core/question.js';
 import { navigate } from '../main.js';
 
 const GROUP_CODES = ['1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A'];
@@ -166,6 +166,7 @@ export function renderLearnScreen(container, params) {
       }
 
       body.appendChild(el('p', 'muted', `小測　${quizIndex + 1} / ${def.mapping.length}`));
+      body.appendChild(el('p', 'quiz-ask', QUESTION_PROMPTS[q.type] || ''));
       body.appendChild(el('p', 'quiz-prompt', q.prompt));
 
       const opts = el('div', 'quiz-options');
