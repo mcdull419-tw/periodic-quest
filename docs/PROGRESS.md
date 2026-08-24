@@ -145,8 +145,13 @@ class 狀態），列出 PASS/FAIL，剩下顏色與美感才交給人眼。新�
   寫著「每次改 CORE_ASSETS 都要把 CACHE_VERSION 加一」——第一次就忘了。
   **靠人記住的規則不算機制**，所以改成策略本身就不會過期。離線仍可用
   （退回快取），代價只是連線時多一趟往返，整個 App 一百多 KB，划算。
-- 這台機器沒有 gh CLI、沒有 Homebrew、沒有 SSH 金鑰，`git push` 必須由
-  使用者本人執行（HTTPS + PAT，憑證會存進 osxkeychain）。
+- 這台機器沒有 gh CLI、沒有 Homebrew、沒有 SSH 金鑰。使用者已經手動推過
+  一次，PAT 存進了 osxkeychain，**之後 Claude 可以直接 `git push`**
+  （已實測成功），不必再請使用者複製貼上。若哪天 token 過期會出現
+  認證失敗，那時才需要請使用者重新產一組。
+- 工作區固定留在 `main`。之前在 `feat/plan-1-core` 與 `main` 之間切換，
+  結果請使用者跑不帶參數的 `git push` 時推到沒有上游的分支而失敗。
+  分支留著當歷史，但日常工作與部署都在 main。
 
 ### 測試指令有變
 
