@@ -5,6 +5,7 @@
 
 import { renderPeriodicTable } from '../components/periodic-table.js';
 import { renderZhuyin } from '../components/zhuyin.js';
+import { renderSceneArt } from '../components/scene-art.js';
 import { loadData } from '../data/load.js';
 import { loadState, saveState } from '../core/store.js';
 import { navigate } from '../main.js';
@@ -258,7 +259,15 @@ export function renderTableScreen(container, params) {
       learn.textContent = '學這一族';
       learn.onclick = () => navigate('learn', { group: groupDef.group });
 
-      chantSlot.append(heading, renderChant(groupDef.chant, -1), learn);
+      const art = renderSceneArt(groupDef.group, groupDef.scene);
+      if (art) art.classList.add('is-inline');
+      const chantBox = document.createElement('div');
+      chantBox.className = 'scene-box';
+      if (art) chantBox.appendChild(art);
+      const chantText = document.createElement('div');
+      chantText.append(heading, renderChant(groupDef.chant, -1), learn);
+      chantBox.appendChild(chantText);
+      chantSlot.appendChild(chantBox);
     }
 
     function drawDetail() {

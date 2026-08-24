@@ -9,6 +9,7 @@
 
 import { loadData } from '../data/load.js';
 import { renderZhuyin } from '../components/zhuyin.js';
+import { renderSceneArt } from '../components/scene-art.js';
 import { makeQuestion, checkAnswer, QUESTION_PROMPTS } from '../core/question.js';
 import { navigate } from '../main.js';
 
@@ -89,8 +90,14 @@ export function renderLearnScreen(container, params) {
       body.appendChild(header());
 
       // 場景只在第一個字時出現：它是整族的開場，不是每個字都要重講一次。
+      // 插圖與場景文字放在一起——圖像記憶法的價值在畫面聯想，只給文字
+      // 等於少了一半（spec §5.2.2）。
       if (step === 0) {
-        body.appendChild(el('p', 'scene', `場景：${def.scene}`));
+        const box = el('div', 'scene-box');
+        const art = renderSceneArt(def.group, def.scene);
+        if (art) box.appendChild(art);
+        box.appendChild(el('p', 'scene', `場景：${def.scene}`));
+        body.appendChild(box);
       }
 
       const m = def.mapping[step];
@@ -138,8 +145,15 @@ export function renderLearnScreen(container, params) {
       if (step === def.mapping.length - 1 && def.sceneNext) {
         const nextDef = groups.find(g => g.group === def.sceneNext);
         if (nextDef) {
-          body.appendChild(el('p', 'scene scene-next',
+          const box = el('div', 'scene-box');
+          const art = renderSceneArt(nextDef.group, nextDef.scene);
+          if (art) {
+            art.classList.add('is-next');
+            box.appendChild(art);
+          }
+          box.appendChild(el('p', 'scene scene-next',
             `接下來（${nextDef.name} ${nextDef.group}）：${nextDef.scene}`));
+          body.appendChild(box);
         }
       }
     }

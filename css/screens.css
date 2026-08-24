@@ -442,3 +442,40 @@
   font-size: var(--font-size-sm);
   line-height: 1.6;
 }
+
+/* ---- 口訣場景插圖（Plan 2 提前） --------------------------------------- */
+
+/* 圖與文字並排；手機寬度不夠時自動折成上下 */
+.scene-box {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  margin: var(--gap-sm) 0;
+}
+
+.scene-box > .scene {
+  flex: 1 1 180px;
+  margin: 0;
+}
+
+/* 插圖用 currentColor 當主色，所以顏色跟著文字走，深色模式自動反轉 */
+.scene-art {
+  flex: 0 0 auto;
+  width: 150px;
+  height: 94px;
+  color: var(--text);
+}
+
+/* 週期表畫面的口訣區空間較小，縮一號 */
+.scene-art.is-inline {
+  width: 116px;
+  height: 72px;
+}
+
+/* 下一族的預告是配角，壓低存在感 */
+.scene-art.is-next {
+  width: 110px;
+  height: 69px;
+  opacity: 0.7;
+}
