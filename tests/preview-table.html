@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>週期表元件預覽（Task 3.1 驗收用）</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/periodic-table.css">
+<style>
+  /* 這頁不是 App 的一部分，是 Task 3.1 的人工驗收工具。
+     只放這頁自己需要的版面，不污染 components.css。 */
+  body { padding: 12px; display: block; }
+  h1 { font-size: var(--font-size-lg); margin: 0 0 4px; }
+  p.sub { color: var(--text-dim); font-size: var(--font-size-sm); margin: 0 0 12px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .controls button, .controls select {
+    font: inherit; padding: 6px 10px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  #log { margin-top: 12px; font-size: var(--font-size-sm); color: var(--text-dim); }
+  #checks { margin-top: 16px; font-size: var(--font-size-sm); line-height: 1.6; }
+  #checks .pass::before { content: "PASS  "; color: var(--correct); font-weight: 700; }
+  #checks .fail::before { content: "FAIL  "; color: var(--wrong); font-weight: 700; }
+  #checks .fail { color: var(--wrong); }
+  #summary { font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>週期表元件預覽</h1>
+<p class="sub">Task 3.1 驗收用。下方的檢查跑在真實瀏覽器的 DOM 上，顏色與深色模式仍需人眼確認。</p>
+
+<div class="controls">
+  <button id="btn-browse">browse 模式</button>
+  <button id="btn-locate">locate 模式</button>
+  <select id="sel-group">
+    <option value="">不高亮</option>
+    <option value="1A">高亮 1A</option>
+    <option value="2A">高亮 2A</option>
+    <option value="7A">高亮 7A</option>
+    <option value="8A">高亮 8A</option>
+  </select>
+  <button id="btn-z">高亮 11、19、26</button>
+</div>
+
+<div id="table"></div>
+<div id="log">還沒點過任何格子。</div>
+<div id="checks"></div>
+<div id="summary"></div>
+
+<script type="module">
+import { renderPeriodicTable } from '../js/components/periodic-table.js';
+
+const host = document.getElementById('table');
+const log = document.getElementById('log');
+const elements = await (await fetch('../data/elements.json')).json();
+
+let state = { mode: 'browse', highlightGroup: null, highlightZ: [] };
+
+function draw() {
+  renderPeriodicTable(host, elements, {
+    mode: state.mode,
+    highlightGroup: state.highlightGroup,
+    highlightZ: state.highlightZ,
+    onSelect: el => { log.textContent = `onSelect：${el.z} ${el.zh} ${el.symbol}（第 ${el.period} 週期、第 ${el.group} 族）`; }
+  });
+}
+
+document.getElementById('btn-browse').onclick = () => { state.mode = 'browse'; draw(); };
+document.getElementById('btn-locate').onclick = () => { state.mode = 'locate'; draw(); };
+document.getElementById('sel-group').onchange = e => { state.highlightGroup = e.target.value || null; draw(); };
+document.getElementById('btn-z').onclick = () => {
+  state.highlightZ = state.highlightZ.length ? [] : [11, 19, 26];
+  draw();
+};
+draw();
+
+// ---- 自動檢查 ------------------------------------------------------------
+// 這些是「不必用眼睛也能確定」的部分：格數、座標、尺寸、捲動、互動。
+// 顏色是否好看、深色模式是否舒服，這裡驗不了，要人看。
+const results = [];
+function check(name, fn) {
+  try { const msg = fn(); results.push([true, name + (msg ? `（${msg}）` : '')]); }
+  catch (e) { results.push([false, name + '：' + e.message]); }
+}
+function assert(cond, msg) { if (!cond) throw new Error(msg); }
+
+const cells = () => Array.from(host.querySelectorAll('.pt-cell[data-z]'));
+
+check('118 格全部就位', () => {
+  assert(cells().length === 118, `只有 ${cells().length} 格`);
+});
+
+check('原子序 1–118 連續無缺漏', () => {
+  const zs = new Set(cells().map(c => Number(c.dataset.z)));
+  const missing = [];
+  for (let z = 1; z <= 118; z++) if (!zs.has(z)) missing.push(z);
+  assert(missing.length === 0, '缺 ' + missing.join(', '));
+});
+
+check('主表元素的欄列座標等於 group／period', () => {
+  const bad = [];
+  for (const el of elements) {
+    if (el.category === 'lanthanide' || el.category === 'actinide') continue;
+    const cell = host.querySelector(`.pt-cell[data-z="${el.z}"]`);
+    if (cell.style.gridColumn !== String(el.group) || cell.style.gridRow !== String(el.period)) {
+      bad.push(el.z);
+    }
+  }
+  assert(bad.length === 0, '座標錯誤：' + bad.join(', '));
+});
+
+check('鑭系 57–71 在第 9 列、錒系 89–103 在第 10 列，皆自第 3 欄起', () => {
+  const rows = { lanthanide: '9', actinide: '10' };
+  for (const [cat, row] of Object.entries(rows)) {
+    const series = elements.filter(e => e.category === cat).sort((a, b) => a.z - b.z);
+    assert(series.length === 15, `${cat} 有 ${series.length} 個，應為 15`);
+    series.forEach((el, i) => {
+      const cell = host.querySelector(`.pt-cell[data-z="${el.z}"]`);
+      assert(cell.style.gridRow === row, `z=${el.z} 在第 ${cell.style.gridRow} 列`);
+      assert(cell.style.gridColumn === String(3 + i), `z=${el.z} 在第 ${cell.style.gridColumn} 欄`);
+    });
+  }
+});
+
+check('主表第 3 欄留有兩個佔位格', () => {
+  const ph = Array.from(host.querySelectorAll('.pt-placeholder'));
+  assert(ph.length === 2, `有 ${ph.length} 個`);
+  assert(ph.map(p => p.textContent).join('／') === '57–71／89–103', ph.map(p => p.textContent).join('／'));
+});
+
+check('每格都達到 44×44 的最小可點尺寸', () => {
+  const small = cells().filter(c => c.offsetWidth < 44 || c.offsetHeight < 44);
+  assert(small.length === 0, `${small.length} 格過小，最小的是 ${small[0] && small[0].offsetWidth}×${small[0] && small[0].offsetHeight}`);
+  return `目前每格 ${Math.round(cells()[0].offsetWidth)}×${Math.round(cells()[0].offsetHeight)}`;
+});
+
+check('表格容器自己會水平捲動', () => {
+  const sc = host.querySelector('.pt-scroll');
+  assert(sc.scrollWidth > sc.clientWidth, '沒有溢出，看不出是否會捲（把視窗縮窄再重整）');
+  return `內容 ${sc.scrollWidth}px、容器 ${sc.clientWidth}px`;
+});
+
+check('頁面本身沒有水平捲動', () => {
+  const de = document.documentElement;
+  assert(de.scrollWidth <= de.clientWidth, `頁面寬 ${de.scrollWidth}px 超過視窗 ${de.clientWidth}px`);
+});
+
+check('點擊格子會觸發 onSelect', () => {
+  host.querySelector('.pt-cell[data-z="11"]').click();
+  assert(log.textContent.includes('11 鈉 Na'), '記錄是「' + log.textContent + '」');
+});
+
+check('點擊佔位格不會觸發 onSelect', () => {
+  log.textContent = '重設';
+  host.querySelector('.pt-placeholder').click();
+  assert(log.textContent === '重設', '佔位格竟然觸發了 onSelect');
+});
+
+check('highlightGroup 高亮整族，其餘變淡', () => {
+  renderPeriodicTable(host, elements, { highlightGroup: '1A' });
+  const hi = host.querySelectorAll('.pt-cell.is-highlight');
+  const dim = host.querySelectorAll('.pt-cell.is-dimmed');
+  assert(hi.length === 7, `高亮了 ${hi.length} 格，1A 應為 7 格`);
+  assert(dim.length === 111, `變淡了 ${dim.length} 格`);
+});
+
+check('highlightZ 高亮指定的元素', () => {
+  renderPeriodicTable(host, elements, { highlightZ: [11, 19, 26] });
+  const hi = Array.from(host.querySelectorAll('.pt-cell.is-highlight')).map(c => Number(c.dataset.z));
+  assert(hi.sort((a, b) => a - b).join(',') === '11,19,26', '高亮了 ' + hi.join(','));
+});
+
+check('locate 模式不顯示符號與中文名', () => {
+  renderPeriodicTable(host, elements, { mode: 'locate' });
+  assert(host.querySelectorAll('.pt-symbol').length === 0, '仍有符號');
+  assert(host.querySelectorAll('.pt-zh').length === 0, '仍有中文名');
+  assert(host.querySelectorAll('.pt-z').length === 118, '原子序沒有全部顯示');
+});
+
+// 檢查跑完把畫面還原成可以用眼睛看的狀態
+state = { mode: 'browse', highlightGroup: null, highlightZ: [] };
+draw();
+log.textContent = '還沒點過任何格子。';
+
+const box = document.getElementById('checks');
+box.innerHTML = results.map(([ok, name]) =>
+  `<div class="${ok ? 'pass' : 'fail'}">${name}</div>`).join('');
+const failed = results.filter(r => !r[0]).length;
+document.getElementById('summary').textContent =
+  `${results.length - failed} 項通過，${failed} 項失敗`;
+document.getElementById('summary').style.color =
+  failed ? 'var(--wrong)' : 'var(--correct)';
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+/* ==========================================================================
+   互動式週期表元件（js/components/periodic-table.js）的樣式。
+   顏色一律讀 css/tokens.css 的變數，這裡不出現任何色碼。
+   ========================================================================== */
+
+/* 水平捲動只發生在這一層。頁面本身不得出現水平捲動——18 欄的表一定
+   比手機寬，若讓它撐開 body，底部導覽列與其他畫面都會跟著歪。 */
+.pt-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  /* iOS 慣性捲動 */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--gap-sm);
+}
+
+.pt-grid {
+  display: grid;
+  /* 44px 是可靠點擊的最小尺寸（Apple HIG）。空間夠時才讓格子長大。 */
+  grid-template-columns: repeat(18, minmax(44px, 1fr));
+  /* 1–7 是主表的七個週期，第 8 列是間隔，9–10 放鑭系與錒系 */
+  grid-template-rows: repeat(7, minmax(44px, auto)) var(--gap-sm) repeat(2, minmax(44px, auto));
+  gap: 2px;
+  /* 撐開到內容寬度，讓外層去捲；空間有餘時填滿 */
+  width: max-content;
+  min-width: 100%;
+}
+
+.pt-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 44px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.1;
+  cursor: pointer;
+  /* 118 格逐格淡入淡出會很吵，只在高亮切換時給一點反應 */
+  transition: opacity 0.15s ease;
+}
+
+.pt-cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pt-z {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+}
+
+.pt-symbol {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pt-zh {
+  font-size: 0.6rem;
+}
+
+/* locate 模式：格子裡只剩原子序，把它放大到可讀 */
+.pt-grid[data-mode="locate"] .pt-z {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+/* 鑭系／錒系在主表裡的佔位格，不可點 */
+.pt-placeholder {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  background: transparent;
+  border-style: dashed;
+  cursor: default;
+}
+
+/* ---- 分類色 ------------------------------------------------------------ */
+
+.pt-cell[data-category="alkali-metal"] { background: var(--cat-alkali-metal); }
+.pt-cell[data-category="alkaline-earth"] { background: var(--cat-alkaline-earth); }
+.pt-cell[data-category="transition-metal"] { background: var(--cat-transition-metal); }
+.pt-cell[data-category="post-transition-metal"] { background: var(--cat-post-transition-metal); }
+.pt-cell[data-category="metalloid"] { background: var(--cat-metalloid); }
+.pt-cell[data-category="nonmetal"] { background: var(--cat-nonmetal); }
+.pt-cell[data-category="halogen"] { background: var(--cat-halogen); }
+.pt-cell[data-category="noble-gas"] { background: var(--cat-noble-gas); }
+.pt-cell[data-category="lanthanide"] { background: var(--cat-lanthanide); }
+.pt-cell[data-category="actinide"] { background: var(--cat-actinide); }
+
+/* ---- 高亮 -------------------------------------------------------------- */
+
+/* 高亮靠「邊框加粗 + 其餘變淡」兩件事一起做。只靠顏色的話，
+   在已經有十種分類色的表上根本看不出來。 */
+.pt-cell.is-highlight {
+  border-color: var(--accent);
+  border-width: 2px;
+  padding: 1px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+.pt-cell.is-dimmed {
+  opacity: 0.3;
+}

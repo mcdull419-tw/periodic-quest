@@ -41,6 +41,22 @@
   --nav-height: 64px;
   --max-width: 480px;
 
+  /* 週期表的十個元素分類色（Task 3.1）。
+     淺色模式用低彩度的粉彩底，配 --text 的深色字；
+     深色模式改成同色系的暗色底，配同一個 --text 的淺色字。
+     兩邊都刻意壓低彩度：一張 118 格的表如果十種顏色都很飽和，
+     整體會吵到看不出重點，高亮（highlight）也會被淹沒。 */
+  --cat-alkali-metal: #f7d3bb;
+  --cat-alkaline-earth: #f7e3ae;
+  --cat-transition-metal: #f5c8d2;
+  --cat-post-transition-metal: #d5e0f0;
+  --cat-metalloid: #cbe5d5;
+  --cat-nonmetal: #c6e2f1;
+  --cat-halogen: #d7d0f0;
+  --cat-noble-gas: #eccbe9;
+  --cat-lanthanide: #cbe6e3;
+  --cat-actinide: #e2dac7;
+
   /* iPhone 安全區域（瀏海／Home Indicator） */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -59,6 +75,17 @@
     --accent-2: #a78bfa;
     --correct: #4caf50;
     --wrong: #e57373;
+
+    --cat-alkali-metal: #66412a;
+    --cat-alkaline-earth: #66552a;
+    --cat-transition-metal: #66303c;
+    --cat-post-transition-metal: #303e53;
+    --cat-metalloid: #2f4e3f;
+    --cat-nonmetal: #26495a;
+    --cat-halogen: #39346a;
+    --cat-noble-gas: #552b52;
+    --cat-lanthanide: #24504d;
+    --cat-actinide: #4b432b;
 
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
   }

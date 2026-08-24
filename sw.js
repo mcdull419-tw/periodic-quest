@@ -9,7 +9,7 @@
 // （例如 pq-v1 -> pq-v2），舊快取會在新 Service Worker activate 時被清掉，
 // 學生就不會卡在舊版本、看到過期內容。
 
-const CACHE_VERSION = "pq-v1";
+const CACHE_VERSION = "pq-v2";
 
 // 開發期間會持續新增檔案（data/*.json、js/ui/*.js 等），這裡只預先快取
 // PWA 外殼本身一定需要的固定檔案；其餘檔案在第一次造訪時由 fetch 事件
@@ -20,6 +20,7 @@ const CORE_ASSETS = [
   "manifest.json",
   "css/tokens.css",
   "css/components.css",
+  "css/periodic-table.css",
   "js/main.js",
   "assets/icon.svg",
 ];
