@@ -34,7 +34,11 @@ body {
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--gap) var(--gap) calc(var(--nav-height) + var(--gap));
+  /* 下方留白必須包含 --safe-bottom：.bottom-nav 的高度是
+     nav-height + safe-bottom（iPhone 的 Home Indicator 區域），
+     這裡只扣 nav-height 的話，內容最後一列會剛好被導覽列蓋掉一條。
+     Mac 上 safe-bottom 是 0，所以這個 bug 只在手機上看得到。 */
+  padding: var(--gap) var(--gap) calc(var(--nav-height) + var(--safe-bottom) + var(--gap));
   padding-top: calc(var(--gap) + var(--safe-top));
   overflow-y: auto;
 }
