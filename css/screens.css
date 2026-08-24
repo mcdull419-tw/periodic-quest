@@ -306,3 +306,57 @@
   font-weight: 700;
   margin: var(--gap) 0 4px;
 }
+
+/* ---- 測驗畫面（Task 3.4） ---------------------------------------------- */
+
+.spell-form {
+  display: flex;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap);
+}
+
+.spell-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  /* 16px 以上 iOS Safari 才不會在聚焦時自動放大整個頁面 */
+  font-size: 1rem;
+  padding: 10px 12px;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.spell-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* 「結束這一輪」不該跟作答選項搶注意力 */
+.btn-quiet {
+  margin-top: var(--gap);
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+  text-decoration: underline;
+}
+
+.wrong-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+  margin: var(--gap-sm) 0;
+}
+
+.wrong-item {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: var(--font-size-sm);
+}

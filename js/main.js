@@ -7,6 +7,7 @@
 
 import { renderTableScreen } from "./ui/screen-table.js";
 import { renderLearnScreen } from "./ui/screen-learn.js";
+import { renderQuizScreen } from "./ui/screen-quiz.js";
 
 const screens = {};
 const app = document.getElementById("app");
@@ -122,6 +123,7 @@ function registerServiceWorker() {
 // 那時候還沒註冊的畫面會被當成不存在，顯示「建置中」佔位內容。
 registerScreen("table", renderTableScreen);
 registerScreen("learn", renderLearnScreen);
+registerScreen("quiz", renderQuizScreen);
 
 window.addEventListener("hashchange", render);
 init();

@@ -97,11 +97,13 @@ function createPlaceholder(label, row) {
  * @param {boolean} [options.revealGroup] 若 highlightGroup 那一欄不在可視範圍內，
  *   自動捲過去。只有「使用者剛剛換了族」時才該傳 true——每次重畫都捲會把
  *   使用者自己捲到的位置搶走。
+ * @param {number | null} [options.revealZ] 同上，但指定單一原子序。
+ *   table-locate 題答完要把正解那一格捲進畫面時用。
  * @returns {void}
  */
 export function renderPeriodicTable(container, elements, options = {}) {
   const { onSelect, highlightGroup = null, highlightZ = [], mode = 'browse',
-          showZhuyin = false, revealGroup = false } = options;
+          showZhuyin = false, revealGroup = false, revealZ = null } = options;
   const highlightSet = new Set(highlightZ);
 
   // 改高亮、切注音、點選元素都會走到這裡重畫整張表，捲動容器一起被
@@ -211,6 +213,9 @@ export function renderPeriodicTable(container, elements, options = {}) {
   // 沿用使用者捲到的地方，只有這一種情況才覆寫。
   if (revealGroup && highlightGroup !== null) {
     revealColumn(scroller, grid.querySelector(`.pt-cell[data-main-group="${highlightGroup}"]`));
+  }
+  if (revealZ !== null) {
+    revealColumn(scroller, grid.querySelector(`.pt-cell[data-z="${revealZ}"]`));
   }
 }
 
