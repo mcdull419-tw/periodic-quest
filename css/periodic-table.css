@@ -60,8 +60,32 @@
   font-weight: 700;
 }
 
+.pt-name {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  line-height: 1;
+}
+
 .pt-zh {
   font-size: 0.6rem;
+}
+
+/* 注音比中文名再小一級，且用次要色——它是輔助讀音，不該跟中文名搶。 */
+.pt-zhuyin {
+  font-size: 0.45rem;
+  color: var(--text-dim);
+  letter-spacing: -0.02em;
+}
+
+/* 開啟注音時整排格子加寬加高。不加寬的話「鈉 ㄋㄚˋ」在 44px 裡會擠成一團；
+   寧可讓表變寬、多捲一點，也不要犧牲可讀性。 */
+.pt-grid[data-zhuyin="on"] {
+  grid-template-columns: repeat(18, minmax(58px, 1fr));
+}
+
+.pt-grid[data-zhuyin="on"] .pt-cell {
+  min-height: 56px;
 }
 
 /* locate 模式：格子裡只剩原子序，把它放大到可讀 */
@@ -94,8 +118,8 @@
 
 /* ---- 高亮 -------------------------------------------------------------- */
 
-/* 高亮靠「邊框加粗 + 其餘變淡」兩件事一起做。只靠顏色的話，
-   在已經有十種分類色的表上根本看不出來。 */
+/* 篩選出來的整族。靠「邊框加粗 + 其餘變淡」兩件事一起做，
+   只靠顏色的話，在已經有十種分類色的表上根本看不出來。 */
 .pt-cell.is-highlight {
   border-color: var(--accent);
   border-width: 2px;
@@ -106,4 +130,13 @@
 
 .pt-cell.is-dimmed {
   opacity: 0.3;
+}
+
+/* 目前選取的那一格。用外擴的光環而非變更邊框，才能和上面的
+   整族高亮疊在一起看（在 1A 篩選下點鈉時兩個 class 會同時出現）。 */
+.pt-cell.is-selected {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 1px;
+  z-index: 1;
+  font-weight: 700;
 }

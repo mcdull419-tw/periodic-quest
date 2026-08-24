@@ -9,7 +9,7 @@
 // （例如 pq-v1 -> pq-v2），舊快取會在新 Service Worker activate 時被清掉，
 // 學生就不會卡在舊版本、看到過期內容。
 
-const CACHE_VERSION = "pq-v2";
+const CACHE_VERSION = "pq-v3";
 
 // 開發期間會持續新增檔案（data/*.json、js/ui/*.js 等），這裡只預先快取
 // PWA 外殼本身一定需要的固定檔案；其餘檔案在第一次造訪時由 fetch 事件
@@ -21,6 +21,7 @@ const CORE_ASSETS = [
   "css/tokens.css",
   "css/components.css",
   "css/periodic-table.css",
+  "css/screens.css",
   "js/main.js",
   "assets/icon.svg",
 ];
@@ -48,10 +49,34 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// 開發時的例外：cache-first 會讓「改了檔案、重整卻還是舊的」變成常態，
+// 而 Phase 3 的驗收就是靠反覆重整看畫面。在本機與區網位址改用
+// network-first（拿不到才回頭找快取），正式網域維持 cache-first——
+// 離線可用是這個 App 的重點功能之一，不能為了開發方便犧牲。
+const DEV_HOST = /^(localhost|127\.0\.0\.1|\[?::1\]?|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/;
+const IS_DEV = DEV_HOST.test(self.location.hostname);
+
 self.addEventListener("fetch", (event) => {
   // 只處理 GET；只處理同源請求（本專案不連任何外部資源，見專案規範）。
   if (event.request.method !== "GET") return;
   if (new URL(event.request.url).origin !== self.location.origin) return;
+
+  if (IS_DEV) {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        caches.match(event.request).then(
+          (cached) =>
+            cached ||
+            new Response("離線中，且尚未快取此資源。", {
+              status: 503,
+              statusText: "Offline",
+              headers: { "Content-Type": "text/plain; charset=utf-8" },
+            })
+        )
+      )
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

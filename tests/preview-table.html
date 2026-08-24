@@ -42,6 +42,7 @@
     <option value="8A">高亮 8A</option>
   </select>
   <button id="btn-z">高亮 11、19、26</button>
+  <button id="btn-zhuyin">切換注音</button>
 </div>
 
 <div id="table"></div>
@@ -56,13 +57,14 @@ const host = document.getElementById('table');
 const log = document.getElementById('log');
 const elements = await (await fetch('../data/elements.json')).json();
 
-let state = { mode: 'browse', highlightGroup: null, highlightZ: [] };
+let state = { mode: 'browse', highlightGroup: null, highlightZ: [], showZhuyin: false };
 
 function draw() {
   renderPeriodicTable(host, elements, {
     mode: state.mode,
     highlightGroup: state.highlightGroup,
     highlightZ: state.highlightZ,
+    showZhuyin: state.showZhuyin,
     onSelect: el => { log.textContent = `onSelect：${el.z} ${el.zh} ${el.symbol}（第 ${el.period} 週期、第 ${el.group} 族）`; }
   });
 }
@@ -70,6 +72,9 @@ function draw() {
 document.getElementById('btn-browse').onclick = () => { state.mode = 'browse'; draw(); };
 document.getElementById('btn-locate').onclick = () => { state.mode = 'locate'; draw(); };
 document.getElementById('sel-group').onchange = e => { state.highlightGroup = e.target.value || null; draw(); };
+document.getElementById('btn-zhuyin').onclick = () => {
+  state.showZhuyin = !state.showZhuyin; draw();
+};
 document.getElementById('btn-z').onclick = () => {
   state.highlightZ = state.highlightZ.length ? [] : [11, 19, 26];
   draw();
@@ -166,10 +171,22 @@ check('highlightGroup 高亮整族，其餘變淡', () => {
   assert(dim.length === 111, `變淡了 ${dim.length} 格`);
 });
 
-check('highlightZ 高亮指定的元素', () => {
+check('highlightZ 標記選取的格子，但不讓其他格變淡', () => {
   renderPeriodicTable(host, elements, { highlightZ: [11, 19, 26] });
-  const hi = Array.from(host.querySelectorAll('.pt-cell.is-highlight')).map(c => Number(c.dataset.z));
-  assert(hi.sort((a, b) => a - b).join(',') === '11,19,26', '高亮了 ' + hi.join(','));
+  const sel = Array.from(host.querySelectorAll('.pt-cell.is-selected')).map(c => Number(c.dataset.z));
+  assert(sel.sort((a, b) => a - b).join(',') === '11,19,26', '選取了 ' + sel.join(','));
+  const dim = host.querySelectorAll('.pt-cell.is-dimmed').length;
+  assert(dim === 0, `有 ${dim} 格變淡了，選取單一格不該把整張表變暗`);
+});
+
+check('篩選與選取可同時存在，選取的格子不會被篩選變淡', () => {
+  // 在 1A 篩選下選鐵（26，過渡金屬，不屬於 1A）
+  renderPeriodicTable(host, elements, { highlightGroup: '1A', highlightZ: [26] });
+  const fe = host.querySelector('.pt-cell[data-z=\"26\"]');
+  assert(fe.classList.contains('is-selected'), '鐵沒有被標記為選取');
+  assert(!fe.classList.contains('is-dimmed'), '選取的鐵被篩選變淡了');
+  const na = host.querySelector('.pt-cell[data-z=\"11\"]');
+  assert(na.classList.contains('is-highlight'), '鈉屬於 1A，應該高亮');
 });
 
 check('locate 模式不顯示符號與中文名', () => {
@@ -179,8 +196,30 @@ check('locate 模式不顯示符號與中文名', () => {
   assert(host.querySelectorAll('.pt-z').length === 118, '原子序沒有全部顯示');
 });
 
+check('預設不顯示注音', () => {
+  renderPeriodicTable(host, elements, {});
+  assert(host.querySelectorAll('.pt-zhuyin').length === 0, '預設就顯示了注音');
+});
+
+check('showZhuyin 讓 118 格都附上注音，且格子仍達最小可點尺寸', () => {
+  renderPeriodicTable(host, elements, { showZhuyin: true });
+  const zy = host.querySelectorAll('.pt-zhuyin');
+  assert(zy.length === 118, `只有 ${zy.length} 格有注音`);
+  const blank = Array.from(zy).filter(n => !n.textContent.trim());
+  assert(blank.length === 0, `${blank.length} 格的注音是空的`);
+  const small = cells().filter(c => c.offsetWidth < 44 || c.offsetHeight < 44);
+  assert(small.length === 0, `${small.length} 格過小`);
+  return `開啟後每格 ${Math.round(cells()[0].offsetWidth)}×${Math.round(cells()[0].offsetHeight)}`;
+});
+
+check('locate 模式不受注音開關影響，仍然只有原子序', () => {
+  renderPeriodicTable(host, elements, { mode: 'locate', showZhuyin: true });
+  assert(host.querySelectorAll('.pt-zhuyin').length === 0, 'locate 模式漏出了注音');
+  assert(host.querySelectorAll('.pt-symbol').length === 0, 'locate 模式漏出了符號');
+});
+
 // 檢查跑完把畫面還原成可以用眼睛看的狀態
-state = { mode: 'browse', highlightGroup: null, highlightZ: [] };
+state = { mode: 'browse', highlightGroup: null, highlightZ: [], showZhuyin: false };
 draw();
 log.textContent = '還沒點過任何格子。';
 

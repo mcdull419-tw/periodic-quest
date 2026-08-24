@@ -17,9 +17,10 @@ const F_BLOCK_START_COLUMN = 3;
  * 建一個元素格子。
  * @param {object} el 元素資料
  * @param {'browse' | 'locate'} mode
+ * @param {boolean} showZhuyin 中文名旁是否附注音
  * @returns {HTMLButtonElement}
  */
-function createCell(el, mode) {
+function createCell(el, mode, showZhuyin) {
   const cell = document.createElement('button');
   cell.type = 'button';
   cell.className = 'pt-cell';
@@ -41,11 +42,22 @@ function createCell(el, mode) {
     symbol.className = 'pt-symbol';
     symbol.textContent = el.symbol;
 
+    const name = document.createElement('span');
+    name.className = 'pt-name';
+
     const zh = document.createElement('span');
     zh.className = 'pt-zh';
     zh.textContent = el.zh;
+    name.appendChild(zh);
 
-    cell.append(symbol, zh);
+    if (showZhuyin && el.zhuyin) {
+      const zhuyin = document.createElement('span');
+      zhuyin.className = 'pt-zhuyin';
+      zhuyin.textContent = el.zhuyin;
+      name.appendChild(zhuyin);
+    }
+
+    cell.append(symbol, name);
     cell.setAttribute('aria-label', `${el.z} ${el.zh} ${el.symbol}`);
   }
   return cell;
@@ -74,13 +86,19 @@ function createPlaceholder(label, row) {
  * @param {object[]} elements 元素資料陣列（通常是 data/elements.json 的全部 118 筆）
  * @param {object} [options]
  * @param {(element: object) => void} [options.onSelect] 點擊格子時呼叫
- * @param {string | null} [options.highlightGroup] 主族代號，例如 '1A'，整族高亮
- * @param {number[]} [options.highlightZ] 個別高亮的原子序
+ * @param {string | null} [options.highlightGroup] 主族代號，例如 '1A'。
+ *   整族加上 is-highlight，其餘全部變淡——這是「篩選」的語意。
+ * @param {number[]} [options.highlightZ] 標記為已選取的原子序，加上 is-selected。
+ *   不會讓其他格變淡——這是「游標」的語意，點一格就把整張表變暗太吵，
+ *   而且在 table-locate 題型裡還要能同時看清楚周圍的格子。
  * @param {'browse' | 'locate'} [options.mode] locate 模式下格子不顯示符號與中文名
+ * @param {boolean} [options.showZhuyin] 中文名旁是否附注音。開啟時格子會加寬加高，
+ *   整張表變寬、要多捲一點——所以預設關閉，由畫面上的開關決定。
  * @returns {void}
  */
 export function renderPeriodicTable(container, elements, options = {}) {
-  const { onSelect, highlightGroup = null, highlightZ = [], mode = 'browse' } = options;
+  const { onSelect, highlightGroup = null, highlightZ = [], mode = 'browse',
+          showZhuyin = false } = options;
   const highlightSet = new Set(highlightZ);
 
   container.innerHTML = '';
@@ -93,6 +111,7 @@ export function renderPeriodicTable(container, elements, options = {}) {
   const grid = document.createElement('div');
   grid.className = 'pt-grid';
   grid.dataset.mode = mode;
+  grid.dataset.zhuyin = showZhuyin ? 'on' : 'off';
   grid.setAttribute('role', 'grid');
   grid.setAttribute('aria-label', '元素週期表');
 
@@ -104,7 +123,7 @@ export function renderPeriodicTable(container, elements, options = {}) {
       fBlock.push(el);
       continue;
     }
-    const cell = createCell(el, mode);
+    const cell = createCell(el, mode, showZhuyin);
     cell.style.gridColumn = String(el.group);
     cell.style.gridRow = String(el.period);
     grid.appendChild(cell);
@@ -117,7 +136,7 @@ export function renderPeriodicTable(container, elements, options = {}) {
       .filter(el => el.category === category)
       .sort((a, b) => a.z - b.z);
     series.forEach((el, i) => {
-      const cell = createCell(el, mode);
+      const cell = createCell(el, mode, showZhuyin);
       cell.style.gridColumn = String(F_BLOCK_START_COLUMN + i);
       cell.style.gridRow = String(F_BLOCK_ROW[category]);
       grid.appendChild(cell);
@@ -133,12 +152,21 @@ export function renderPeriodicTable(container, elements, options = {}) {
     }
   }
 
-  // 高亮：整族與個別原子序兩種來源，套的是同一個 class。
+  // 兩種標記各有各的語意，不共用 class：
+  //   highlightGroup —— 篩選：選中的整族亮起來，其餘變淡。
+  //   highlightZ     —— 游標：標記目前選取的格子，不動其他格。
+  // 兩者可以同時存在（在 1A 篩選下點鈉），此時鈉同時有兩個 class。
   grid.querySelectorAll('.pt-cell[data-z]').forEach(cell => {
     const z = Number(cell.dataset.z);
-    const inGroup = highlightGroup !== null && cell.dataset.mainGroup === highlightGroup;
-    if (inGroup || highlightSet.has(z)) cell.classList.add('is-highlight');
-    else if (highlightGroup !== null || highlightSet.size > 0) cell.classList.add('is-dimmed');
+    if (highlightGroup !== null) {
+      const inGroup = cell.dataset.mainGroup === highlightGroup;
+      cell.classList.add(inGroup ? 'is-highlight' : 'is-dimmed');
+    }
+    if (highlightSet.has(z)) {
+      cell.classList.add('is-selected');
+      // 選取的格子一定要看得見，即使它不屬於目前篩選的族
+      cell.classList.remove('is-dimmed');
+    }
   });
 
   if (typeof onSelect === 'function') {

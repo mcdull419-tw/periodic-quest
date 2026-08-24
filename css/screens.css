@@ -1,0 +1,163 @@
+/* ==========================================================================
+   Phase 3 各畫面共用的樣式。
+   components.css 放的是版面骨架與底部導覽；這裡放畫面內部的元件
+   （標題、篩選籤、口訣、詳細面板）。畫面陸續做出來時往這裡加，
+   不要每個畫面各開一個 CSS 檔——那樣 index.html 的 link 與 sw.js 的
+   CORE_ASSETS 每次都要跟著改，很容易漏。
+   ========================================================================== */
+
+.screen-title {
+  font-size: var(--font-size-lg);
+  margin: 0 0 var(--gap-sm);
+}
+
+.muted {
+  color: var(--text-dim);
+  font-size: var(--font-size-sm);
+}
+
+.error {
+  color: var(--wrong);
+}
+
+/* ---- 主族篩選籤 -------------------------------------------------------- */
+
+.group-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-sm);
+}
+
+.chip {
+  font: inherit;
+  font-size: var(--font-size-sm);
+  padding: 6px 12px;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- 口訣 -------------------------------------------------------------- */
+
+.chant-slot:not(:empty) {
+  margin-bottom: var(--gap-sm);
+}
+
+.chant {
+  margin: 4px 0;
+  font-size: var(--font-size-lg);
+  letter-spacing: 0.15em;
+}
+
+.chant-char.is-hit {
+  color: var(--accent);
+  font-weight: 700;
+  /* 只換顏色在深色模式下不夠明顯，加一條底線 */
+  border-bottom: 3px solid var(--accent);
+}
+
+/* ---- 元素詳細面板 ------------------------------------------------------ */
+
+.detail {
+  margin-top: var(--gap);
+}
+
+.detail-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap);
+  margin: calc(-1 * var(--gap-sm)) calc(-1 * var(--gap)) var(--gap-sm);
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--surface-alt);
+}
+
+.detail-head[data-category="alkali-metal"] { background: var(--cat-alkali-metal); }
+.detail-head[data-category="alkaline-earth"] { background: var(--cat-alkaline-earth); }
+.detail-head[data-category="transition-metal"] { background: var(--cat-transition-metal); }
+.detail-head[data-category="post-transition-metal"] { background: var(--cat-post-transition-metal); }
+.detail-head[data-category="metalloid"] { background: var(--cat-metalloid); }
+.detail-head[data-category="nonmetal"] { background: var(--cat-nonmetal); }
+.detail-head[data-category="halogen"] { background: var(--cat-halogen); }
+.detail-head[data-category="noble-gas"] { background: var(--cat-noble-gas); }
+.detail-head[data-category="lanthanide"] { background: var(--cat-lanthanide); }
+.detail-head[data-category="actinide"] { background: var(--cat-actinide); }
+
+.detail-z {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+  align-self: start;
+}
+
+.detail-symbol {
+  grid-column: 2;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.detail-names {
+  grid-column: 2;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+}
+
+.detail-zhuyin {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}
+
+.detail-en {
+  color: var(--text-dim);
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px var(--gap);
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--text-dim);
+  font-size: var(--font-size-sm);
+}
+
+.detail-list dd {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}
+
+.detail-subtitle {
+  font-size: var(--font-size-base);
+  margin: var(--gap) 0 0;
+}
+
+.detail-progress {
+  margin: var(--gap-sm) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}

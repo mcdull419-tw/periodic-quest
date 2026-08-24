@@ -5,6 +5,8 @@
 // 之後 Task 3.2–3.5 會用 registerScreen() 依序註冊 home / table / quiz / review，
 // 其中 table 畫面點進某一族時會導覽到 learn 畫面並帶上 group 參數。
 
+import { renderTableScreen } from "./ui/screen-table.js";
+
 const screens = {};
 const app = document.getElementById("app");
 
@@ -71,7 +73,7 @@ function render() {
   updateNavActiveState(name);
 }
 
-/** 找不到對應畫面時的預設內容（目前四個畫面都還沒註冊，所以一律會看到這個）。 */
+/** 找不到對應畫面時的預設內容（尚未註冊的畫面會看到這個）。 */
 function renderPlaceholder(name) {
   const wrap = document.createElement("div");
   wrap.className = "placeholder";
@@ -114,6 +116,10 @@ function registerServiceWorker() {
     });
   });
 }
+
+// 畫面註冊必須在 init() 之前——init() 會立刻依 hash 渲染一次，
+// 那時候還沒註冊的畫面會被當成不存在，顯示「建置中」佔位內容。
+registerScreen("table", renderTableScreen);
 
 window.addEventListener("hashchange", render);
 init();
