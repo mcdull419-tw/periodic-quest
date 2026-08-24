@@ -119,15 +119,15 @@
 .detail-names {
   grid-column: 2;
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 6px;
   font-size: var(--font-size-sm);
 }
 
+/* 詳細面板的注音給大一點，這裡是學生真的會盯著看讀音的地方 */
 .detail-zhuyin {
-  font-size: var(--font-size-sm);
-  color: var(--text-dim);
+  font-size: 0.62em;
 }
 
 .detail-en {
@@ -209,7 +209,14 @@
 }
 
 .learn-zh {
-  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 2px;
+  font-size: var(--font-size-lg);
+}
+
+.learn-zhuyin {
+  font-size: 0.45em;
 }
 
 .learn-z {

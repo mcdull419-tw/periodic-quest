@@ -201,12 +201,20 @@ check('預設不顯示注音', () => {
   assert(host.querySelectorAll('.pt-zhuyin').length === 0, '預設就顯示了注音');
 });
 
-check('showZhuyin 讓 118 格都附上注音，且格子仍達最小可點尺寸', () => {
+check('showZhuyin 讓 118 格都附上直寫注音，且格子仍達最小可點尺寸', () => {
   renderPeriodicTable(host, elements, { showZhuyin: true });
   const zy = host.querySelectorAll('.pt-zhuyin');
   assert(zy.length === 118, `只有 ${zy.length} 格有注音`);
   const blank = Array.from(zy).filter(n => !n.textContent.trim());
   assert(blank.length === 0, `${blank.length} 格的注音是空的`);
+  // 直寫：音節本體要是 vertical-rl，聲調要獨立成一個節點
+  const bases = host.querySelectorAll('.pt-zhuyin .zhuyin-base');
+  assert(bases.length === 118, `只有 ${bases.length} 格是直寫結構`);
+  const notVertical = Array.from(bases).filter(
+    n => getComputedStyle(n).writingMode.indexOf('vertical') !== 0);
+  assert(notVertical.length === 0, `${notVertical.length} 格沒有套用直排`);
+  const toned = host.querySelectorAll('.pt-zhuyin .zhuyin-tone');
+  assert(toned.length === 93, `有聲調符號的格子是 ${toned.length} 個，應為 93（118 減去 25 個一聲）`);
   const small = cells().filter(c => c.offsetWidth < 44 || c.offsetHeight < 44);
   assert(small.length === 0, `${small.length} 格過小`);
   return `開啟後每格 ${Math.round(cells()[0].offsetWidth)}×${Math.round(cells()[0].offsetHeight)}`;

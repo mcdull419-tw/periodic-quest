@@ -7,6 +7,8 @@
 // 這個檔案在 js/components/ 而非 js/core/，可以碰 DOM。
 // 顏色一律取自 css/tokens.css 的變數，這裡不硬寫任何色值。
 
+import { renderZhuyin } from './zhuyin.js';
+
 // 主表是 18 欄 × 7 列。鑭系與錒系不排進主表，另外放到下方兩列
 // （第 9、10 列，第 8 列留白當間隔），主表第 3 欄第 6／7 列改放佔位格。
 const MAIN_COLUMNS = 18;
@@ -50,11 +52,9 @@ function createCell(el, mode, showZhuyin) {
     zh.textContent = el.zh;
     name.appendChild(zh);
 
-    if (showZhuyin && el.zhuyin) {
-      const zhuyin = document.createElement('span');
-      zhuyin.className = 'pt-zhuyin';
-      zhuyin.textContent = el.zhuyin;
-      name.appendChild(zhuyin);
+    if (showZhuyin) {
+      const zhuyin = renderZhuyin(el.zhuyin, 'pt-zhuyin');
+      if (zhuyin) name.appendChild(zhuyin);
     }
 
     cell.append(symbol, name);

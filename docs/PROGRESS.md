@@ -167,8 +167,12 @@ stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗�
 
 ```bash
 python3 tests/make-data-fixture.py
-for t in tests/*.test.js; do printf "%-32s " "$t"; python3 tests/run.py js/core/*.js tests/.data.js "$t" | tail -1; done
+for t in tests/*.test.js; do printf "%-32s " "$t"; python3 tests/run.py js/core/*.js js/components/*.js tests/.data.js "$t" | tail -1; done
 ```
+
+`js/components/*.js` 也要串進去：`zhuyin.js` 的 `splitZhuyin` 有測試。
+那個目錄的檔案可以碰 DOM，但都只在函式內碰，頂層純粹是宣告，所以
+在 JXA 下串接不會爆。
 
 `progress.test.js` 末尾兩條測試會偵測 `STAGES` 是否存在：帶 fixture 跑
 （上面這個迴圈）是 18 條，照計畫的單獨指令跑是 16 條。

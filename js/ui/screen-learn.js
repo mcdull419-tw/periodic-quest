@@ -8,6 +8,7 @@
 // 不代表他記得住，那張卡不該因此被推到下一個盒子。
 
 import { loadData } from '../data/load.js';
+import { renderZhuyin } from '../components/zhuyin.js';
 import { makeQuestion, checkAnswer } from '../core/question.js';
 import { navigate } from '../main.js';
 
@@ -101,9 +102,15 @@ export function renderLearnScreen(container, params) {
         el('div', 'learn-el')
       );
       const info = card.querySelector('.learn-el');
+      const zhLine = el('span', 'learn-zh');
+      zhLine.appendChild(document.createTextNode(m.zh));
+      if (item) {
+        const zhuyin = renderZhuyin(item.zhuyin, 'learn-zhuyin');
+        if (zhuyin) zhLine.appendChild(zhuyin);
+      }
       info.append(
         el('span', 'learn-symbol', m.symbol),
-        el('span', 'learn-zh', m.zh + (item && item.zhuyin ? `　${item.zhuyin}` : '')),
+        zhLine,
         el('span', 'learn-z', `第 ${m.z} 號`)
       );
       body.appendChild(card);

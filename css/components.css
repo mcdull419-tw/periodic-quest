@@ -131,3 +131,41 @@ body {
   color: var(--text);
   margin: 0;
 }
+
+/* ---- 直寫注音（js/components/zhuyin.js） -------------------------------- */
+
+/* 三個地方共用：週期表格子、元素詳細面板、教學畫面。字級由使用端
+   用 font-size 覆寫，這裡只定版面。 */
+.zhuyin {
+  display: inline-flex;
+  align-items: stretch;
+  line-height: 1;
+  font-size: 0.5em;
+  color: var(--text-dim);
+}
+
+/* 音節本體直排。text-orientation: upright 讓每個注音符號保持正立，
+   不會被轉成橫躺。 */
+.zhuyin-base {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+/* 二、三、四聲：貼在音節右側、靠下對齊，這是課本的位置。 */
+.zhuyin-tone {
+  display: flex;
+  align-items: flex-end;
+  margin-left: 0.1em;
+  line-height: 1;
+}
+
+/* 輕聲例外：標在音節正上方。目前 118 個元素都沒有輕聲，
+   這條是為了規則完整，不是為了現有資料。 */
+.zhuyin-tone.is-neutral {
+  align-items: flex-start;
+  margin-left: 0;
+  margin-right: 0.1em;
+  order: -1;
+}

@@ -71,21 +71,26 @@
   font-size: 0.6rem;
 }
 
-/* 注音比中文名再小一級，且用次要色——它是輔助讀音，不該跟中文名搶。 */
+/* 注音直寫在中文名右側（樣式主體在 components.css）。
+   這裡只給格子裡用的字級——0.42rem 是三個符號直排後還塞得進
+   一格高度的上限。 */
 .pt-zhuyin {
-  font-size: 0.45rem;
-  color: var(--text-dim);
-  letter-spacing: -0.02em;
+  font-size: 0.42rem;
 }
 
-/* 開啟注音時整排格子加寬加高。不加寬的話「鈉 ㄋㄚˋ」在 44px 裡會擠成一團；
-   寧可讓表變寬、多捲一點，也不要犧牲可讀性。 */
+/* 開啟注音時格子要加高：注音直排三個符號約 3 個字高，
+   比橫寫的中文名高出一截。寬度反而不必加太多，直寫只佔一欄。 */
 .pt-grid[data-zhuyin="on"] {
-  grid-template-columns: repeat(18, minmax(58px, 1fr));
+  grid-template-columns: repeat(18, minmax(50px, 1fr));
 }
 
 .pt-grid[data-zhuyin="on"] .pt-cell {
-  min-height: 56px;
+  min-height: 62px;
+}
+
+/* 中文名與直寫注音要頂端對齊，注音才會從中文名的頭開始往下排 */
+.pt-grid[data-zhuyin="on"] .pt-name {
+  align-items: flex-start;
 }
 
 /* locate 模式：格子裡只剩原子序，把它放大到可讀 */

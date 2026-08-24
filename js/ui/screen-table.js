@@ -4,6 +4,7 @@
 // 解鎖只約束出題範圍（見 js/core/quiz.js），不約束查詢。
 
 import { renderPeriodicTable } from '../components/periodic-table.js';
+import { renderZhuyin } from '../components/zhuyin.js';
 import { loadData } from '../data/load.js';
 import { loadState, saveState } from '../core/store.js';
 import { navigate } from '../main.js';
@@ -92,13 +93,13 @@ function renderDetail(el, groups, state) {
   names.className = 'detail-names';
   const zh = document.createElement('b');
   zh.textContent = el.zh;
-  const zhuyin = document.createElement('span');
-  zhuyin.className = 'detail-zhuyin';
-  zhuyin.textContent = el.zhuyin || '';
   const en = document.createElement('span');
   en.className = 'detail-en';
   en.textContent = el.en;
-  names.append(zh, zhuyin, en);
+  const zhuyin = renderZhuyin(el.zhuyin, 'detail-zhuyin');
+  names.append(zh);
+  if (zhuyin) names.appendChild(zhuyin);
+  names.appendChild(en);
 
   const num = document.createElement('span');
   num.className = 'detail-z';
