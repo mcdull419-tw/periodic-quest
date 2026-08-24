@@ -25,6 +25,11 @@ export const CATEGORIES = [
 const SYMBOL_PATTERN = /^[A-Z][a-z]{0,2}$/;
 const MAIN_GROUPS = ['1A', '2A', '3A', '4A', '5A', '6A', '7A', '8A'];
 
+// 注音必須恰好是「一個音節」：聲母? + 介音? + 韻母? + 聲調?。
+// 元素中文名都是單字，兩個音節一定是抄錯（例如把整個詞的注音貼進來）。
+// 一聲不標符號，這是台灣的標準寫法，不是漏標。
+const ZHUYIN_PATTERN = /^[ㄅ-ㄙ]?[ㄧㄨㄩ]?[ㄚ-ㄦ]?[ˊˇˋ˙]?$/;
+
 /**
  * 驗證元素資料陣列。
  * @param {Array<object>} elements
@@ -65,6 +70,14 @@ export function validateElements(elements) {
       } else {
         zByZh.set(el.zh, el.z);
       }
+    }
+
+    if (typeof el.zhuyin !== 'string' || el.zhuyin.length === 0) {
+      errors.push(`${label}：zhuyin（注音）不可為空`);
+    } else if (!ZHUYIN_PATTERN.test(el.zhuyin)) {
+      errors.push(`${label}：zhuyin「${el.zhuyin}」不是單一注音音節`);
+    } else if (!/[ㄅ-ㄦ]/.test(el.zhuyin)) {
+      errors.push(`${label}：zhuyin「${el.zhuyin}」只有聲調符號，沒有注音符號`);
     }
 
     if (!Number.isInteger(el.period) || el.period < 1 || el.period > 7) {
