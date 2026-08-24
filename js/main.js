@@ -6,6 +6,7 @@
 // 其中 table 畫面點進某一族時會導覽到 learn 畫面並帶上 group 參數。
 
 import { renderTableScreen } from "./ui/screen-table.js";
+import { renderLearnScreen } from "./ui/screen-learn.js";
 
 const screens = {};
 const app = document.getElementById("app");
@@ -120,6 +121,7 @@ function registerServiceWorker() {
 // 畫面註冊必須在 init() 之前——init() 會立刻依 hash 渲染一次，
 // 那時候還沒註冊的畫面會被當成不存在，顯示「建置中」佔位內容。
 registerScreen("table", renderTableScreen);
+registerScreen("learn", renderLearnScreen);
 
 window.addEventListener("hashchange", render);
 init();

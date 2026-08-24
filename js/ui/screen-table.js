@@ -6,6 +6,7 @@
 import { renderPeriodicTable } from '../components/periodic-table.js';
 import { loadData } from '../data/load.js';
 import { loadState, saveState } from '../core/store.js';
+import { navigate } from '../main.js';
 
 // 元素分類的中文標籤。這份對照只有顯示用途，不影響任何邏輯判斷。
 const CATEGORY_LABELS = {
@@ -220,7 +221,16 @@ export function renderTableScreen(container, params) {
       const heading = document.createElement('p');
       heading.className = 'muted';
       heading.textContent = `${groupDef.name}（${groupDef.group}）`;
-      chantSlot.append(heading, renderChant(groupDef.chant, -1));
+
+      // 進教學畫面的入口。brief 沒要求，但沒有它就只能手打
+      // 「#learn?group=1A」才進得去，手機上驗收很痛苦。
+      const learn = document.createElement('button');
+      learn.type = 'button';
+      learn.className = 'btn btn-primary btn-inline';
+      learn.textContent = '學這一族';
+      learn.onclick = () => navigate('learn', { group: groupDef.group });
+
+      chantSlot.append(heading, renderChant(groupDef.chant, -1), learn);
     }
 
     function drawDetail() {

@@ -161,3 +161,119 @@
   font-size: var(--font-size-sm);
   color: var(--text-dim);
 }
+
+/* ---- 記憶法教學畫面（Task 3.3） ---------------------------------------- */
+
+.scene {
+  margin: var(--gap-sm) 0;
+  padding: var(--gap-sm) var(--gap);
+  border-left: 3px solid var(--accent-2);
+  background: var(--surface-alt);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--font-size-sm);
+}
+
+.scene-next {
+  border-left-color: var(--text-dim);
+  color: var(--text-dim);
+}
+
+.learn-card {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  margin: var(--gap) 0 var(--gap-sm);
+}
+
+/* 口訣的那個字放大到跟元素本身一樣重要——這一步教的就是
+   「這個字」對應「這個元素」，兩邊視覺份量要對等。 */
+.learn-char {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.learn-arrow {
+  color: var(--text-dim);
+}
+
+.learn-el {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.learn-symbol {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.learn-zh {
+  font-size: var(--font-size-base);
+}
+
+.learn-z {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}
+
+.learn-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-sm);
+  margin-top: var(--gap);
+}
+
+.btn-inline {
+  margin-top: var(--gap-sm);
+}
+
+/* ---- 小測 -------------------------------------------------------------- */
+
+.quiz-prompt {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin: var(--gap-sm) 0 var(--gap);
+}
+
+.quiz-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap-sm);
+}
+
+.quiz-option {
+  min-height: 48px;
+  font-size: var(--font-size-lg);
+}
+
+.quiz-option.is-correct {
+  border-color: var(--correct);
+  color: var(--correct);
+  font-weight: 700;
+}
+
+.quiz-option.is-wrong {
+  border-color: var(--wrong);
+  color: var(--wrong);
+}
+
+/* 停用後仍要看得出對錯，所以不能整個變淡 */
+.quiz-option:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.feedback {
+  margin: var(--gap) 0 var(--gap-sm);
+  font-weight: 700;
+}
+
+.feedback.is-correct { color: var(--correct); }
+.feedback.is-wrong { color: var(--wrong); }
+
+.quiz-result {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  margin: var(--gap) 0 4px;
+}

@@ -197,3 +197,31 @@ test('nextQuestion 產生的題目其元素在已解鎖範圍內', () => {
                            data: DATA, now: 0 }, () => 0.5);
   ok([1, 3, 11].indexOf(q.z) >= 0);
 });
+
+// 教學畫面（Task 3.3）的小測是用「只含同一族元素」的 data 呼叫
+// makeQuestion，讓干擾項一定來自同族。這裡拿真實資料把八族 × 兩種題型
+// 全跑一遍，確認每一族的元素數都足夠產生四個選項——某一族若只剩三個
+// 元素，選項會少於四個而不會報錯，只會安靜地變成送分題。
+// 需要 fixture（tests/.data.js），沒有就跳過，理由同 progress.test.js。
+if (typeof ELEMENTS !== 'undefined' && typeof GROUPS !== 'undefined') {
+  test('教學小測：八族每個元素都能產生四選項的題目', () => {
+    GROUPS.forEach(def => {
+      const groupZ = {};
+      def.mapping.forEach(m => { groupZ[m.z] = true; });
+      const scoped = {
+        elements: ELEMENTS.filter(e => groupZ[e.z]),
+        groups: GROUPS,
+        stages: []
+      };
+      eq(scoped.elements.length, def.mapping.length);
+      def.mapping.forEach(m => {
+        ['symbol-to-zh', 'zh-to-symbol'].forEach(type => {
+          const q = makeQuestion(type, m.z, scoped, () => 0.5);
+          ok(q !== null, `${def.group} z=${m.z} ${type} 產不出題目`);
+          eq(q.options.length, 4);
+          ok(q.options.indexOf(q.answer) >= 0, `${def.group} z=${m.z} 選項裡沒有正解`);
+        });
+      });
+    });
+  });
+}
