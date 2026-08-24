@@ -98,6 +98,20 @@ export function renderLearnScreen(container, params) {
         if (art) box.appendChild(art);
         box.appendChild(el('p', 'scene', `場景：${def.scene}`));
         body.appendChild(box);
+
+        // 八族串成一條故事線的全圖（spec §5.2.2）。只在第一個字出現，
+        // 讓學生先看到整條線再進到單一族。
+        //
+        // 圖裡原本上半部有一份口訣表格，但那份文字是 AI 生成的、有實際
+        // 錯字（鈣寫成 Cs、矽寫成砂、砷寫成身），所以裁掉只留插畫——
+        // 文字一律由 data/mnemonics-groups.json 出，那份是逐字核對過的。
+        const full = document.createElement('img');
+        full.className = 'chant-scenes';
+        full.src = 'assets/chant-scenes.jpg';
+        full.alt = '八族口訣的場景全圖：被雷劈的蓋斯與佳如、往西嘆息的人群與英國國旗、'
+          + '生病的人、楊柳溪、溪裡的鱷魚、被嚇到的乃亞克';
+        full.loading = 'lazy';
+        body.appendChild(full);
       }
 
       const m = def.mapping[step];

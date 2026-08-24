@@ -479,3 +479,20 @@
   height: 69px;
   opacity: 0.7;
 }
+
+/* 八族場景全圖。原圖是手繪風的紙本筆記，白底；深色模式下直接放會刺眼，
+   所以壓一點亮度並加圓角與邊框，讓它像一張貼在頁面上的紙。 */
+.chant-scenes {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: var(--gap-sm) 0 var(--gap);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chant-scenes {
+    filter: brightness(0.82);
+  }
+}
