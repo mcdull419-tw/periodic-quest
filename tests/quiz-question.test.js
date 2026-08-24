@@ -225,3 +225,31 @@ if (typeof ELEMENTS !== 'undefined' && typeof GROUPS !== 'undefined') {
     });
   });
 }
+
+// questionForZ 是從 nextQuestion 拆出來的：複習畫面自己決定要考哪一個 z
+// （只從到期卡挑），但限縮範圍與換題型重試的規則必須跟測驗完全一致。
+test('questionForZ 對指定原子序出題，且限縮在已解鎖範圍內', () => {
+  const ctx = { cards: [], stages: DATA.stages, unlockedStages: [1], data: DATA, now: 0 };
+  const q = questionForZ(11, ctx, () => 0.5);
+  ok(q !== null);
+  eq(q.z, 11);
+  // 第一關只有 1、3、11，干擾項不可能出現關卡 2 的鐵（26）或關卡外的氧（8）
+  if (q.options) {
+    const zhs = ['鐵', '氧'];
+    zhs.forEach(zh => ok(q.options.indexOf(zh) < 0, `選項不該出現 ${zh}`));
+  }
+});
+
+test('questionForZ 在所有題型都不適用時回傳 null', () => {
+  // 關卡 2 只有鐵：沒有主族所以沒有 chant-blank 與 group-id，
+  // 但其餘五種題型都適用，所以這裡拿一個不在 data 裡的原子序來測。
+  const ctx = { cards: [], stages: DATA.stages, unlockedStages: [1], data: DATA, now: 0 };
+  eq(questionForZ(999, ctx, () => 0.5), null);
+});
+
+test('scopeToUnlocked 同時限縮元素與族代號', () => {
+  const ctx = { cards: [], stages: DATA.stages, unlockedStages: [1], data: DATA, now: 0 };
+  const scoped = scopeToUnlocked(ctx);
+  eq(scoped.elements.map(e => e.z).sort((a, b) => a - b), [1, 3, 11]);
+  eq(scoped.groups.map(g => g.group), ['1A']);
+});

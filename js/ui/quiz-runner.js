@@ -49,10 +49,14 @@ function cardArray(state) {
  * @param {(ctx: object) => object | null} options.pickQuestion 取題函式，
  *   拿到 { cards, stages, unlockedStages, data, now }，回傳題目或 null。
  * @param {string} options.emptyMessage 取不到題目時顯示的訊息
+ * @param {{ label: string, run: () => void } | null} [options.onEmptyAction]
+ *   取不到題目時額外給一個出口按鈕。複習畫面用它把學生導去學新的一族——
+ *   只丟一句「今天沒有要複習的」就把人晾在原地，等於逼他自己找路。
  * @param {number} [options.limit] 題數上限
  */
 export function runQuiz(container, options) {
-  const { title, pickQuestion, emptyMessage, limit = DEFAULT_LIMIT } = options;
+  const { title, pickQuestion, emptyMessage, onEmptyAction = null,
+          limit = DEFAULT_LIMIT } = options;
 
   const heading = el('h2', 'screen-title', title);
   const loading = el('p', 'muted', '載入中…');
@@ -103,7 +107,16 @@ export function runQuiz(container, options) {
     function drawEmpty() {
       body.innerHTML = '';
       body.appendChild(el('p', 'muted', emptyMessage));
-      if (answered > 0) drawResultButtons();
+      if (answered > 0) {
+        drawResultButtons();
+      } else if (onEmptyAction) {
+        const nav = el('div', 'learn-nav');
+        const btn = el('button', 'btn btn-primary', onEmptyAction.label);
+        btn.type = 'button';
+        btn.onclick = onEmptyAction.run;
+        nav.appendChild(btn);
+        body.appendChild(nav);
+      }
     }
 
     // ---- 題目呈現 -----------------------------------------------------

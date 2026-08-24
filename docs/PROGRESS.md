@@ -1,8 +1,11 @@
 # Periodic Quest 進度
 
 **最後更新：** 2026-08-24
-**目前位置：** 分支 `feat/plan-1-core`。已完成 14/18。Phase 3 做到 3.2，
-下一步是 **Task 3.3 記憶法教學畫面**。
+**目前位置：** 分支 `main`。**Phase 3 全部完成，17/19。**
+只剩 Phase 4 的兩個：4.1（1A 七個元素的圖像掛鉤，Opus 親自寫）與
+4.2 的說明文件部分（部署已提前完成）。
+
+（先前寫「/18」是原始計數少算一個，Phase 0–4 合計是 19 個 task。）
 
 **部署已提前：** GitHub repo 為 `mcdull419-tw/periodic-quest`，Task 4.2 的
 GitHub Pages 部分提前到 Phase 3 進行中做，因為使用者不在家時需要能看畫面
@@ -81,12 +84,18 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 - [x] 2.6 進度與關卡解鎖 — Opus（`d572a88`，16 tests；串真實 fixture 時 18）
 
 ### Phase 3：最小可用介面
-- [x] 3.1 互動式週期表元件 — Opus（`944bc90`，瀏覽器內 16 項檢查）
+- [x] 3.1 互動式週期表元件 — Opus（`944bc90`，瀏覽器內 19 項檢查）
 - [x] 3.2 週期表查詢畫面 — Opus（`acd7969`..`e63d575`）
-- [+] 3.2b 118 個元素的注音 — Opus（`acd7969`，計畫外的追加需求）
-- [ ] 3.3 記憶法教學畫面 — Sonnet
-- [ ] 3.4 測驗畫面 — Sonnet
-- [ ] 3.5 首頁、複習入口與導覽 — Sonnet
+- [+] 3.2b 118 個元素的注音 — Opus（`acd7969`、`3f0674f` 改直寫）
+- [x] 3.3 記憶法教學畫面 — Opus（`3ded090`）
+- [x] 3.4 測驗畫面 — Opus（`78d981b`）
+- [x] 3.5 首頁、複習入口與導覽 — Opus
+
+**Phase 3 全部由主 session 自己做，沒有派 sub-agent。** 原因是這個
+session 的設定為「未經使用者要求不主動派 agent」。使用者知道後的指示是：
+**之後以 token 使用量為優先判準決定派工**——脈絡淺、格式固定、彼此獨立
+的工作（例如 Plan 2 的圖像掛鉤文案）派給 sub-agent；依賴大量當前對話
+才有的約定的工作自己做。
 
 ### Phase 4：上線
 - [ ] 4.1 階段 1 的個別元素圖像掛鉤 — **Opus（主 session 親自寫）**
@@ -96,7 +105,25 @@ sub-agent 不繼承對話脈絡，派工時要把該 task 的完整內容貼給�
 
 ## 下一步
 
-**Task 3.3：記憶法教學畫面**（`docs/superpowers/plans/2026-08-23-periodic-quest-core.md`）
+**Task 4.1：階段 1 的個別元素圖像掛鉤**（計畫指定由 Opus 主 session 親自寫）
+
+1A 的七個元素（氫 1、鋰 3、鈉 11、鉀 19、銣 37、銫 55、鍅 87），
+spec §11.4「先驗證再量產」——這七組是之後派給 sub-agent 批次生產其餘
+六關的範本，風格必須立住。寫完要讓學生實際試用再決定要不要調整
+（見〈待決事項〉）。
+
+之後是 Task 4.2 的說明文件部分（部署已完成）。
+
+### Phase 3 的實機驗收踩過的坑（Phase 4 與 Plan 2 都會再遇到）
+
+- **`--safe-bottom` 只在 iPhone 上現形。** `#app` 的下方留白一度漏算
+  安全區域，最後一列被底部導覽列蓋掉；Mac 上 `--safe-bottom` 是 0，
+  完全看不出來。**版面問題不能只在桌機驗。**
+- **cache-first 讓使用者看到的跟部署的不一樣。** 已改為 network-first，
+  見〈部署〉。
+- **重畫會把捲動位置歸零。** 週期表任何狀態改變都整張重建，捲動容器
+  一起被砍掉。現在會保留捲動比例（不是像素——切注音會改變內容寬度）。
+- **往外畫的 outline 會被容器裁掉。** 選取光環改成往內畫。
 
 ### Phase 3 的驗收怎麼做（已與使用者確認）
 
@@ -167,9 +194,9 @@ stages）皆通過驗證，且三層守護機制都經「故意改錯」實驗�
 118 筆中文名對照表、中文名重複檢查、44 筆口訣交叉比對。
 
 目前測試總數：`data` 25、`groups` 6、`stages` 5、`store` 12、`scheduler` 17、
-`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 16、`progress` 16。合計 **110**
-（帶 fixture 跑 progress 時 112）。另有 `tests/preview-table.html` 的 16 項
-瀏覽器內檢查，那些不在上面的數字裡。
+`quiz-pool` 7、`quiz-distractor` 6、`quiz-question` 20、`progress` 18、
+`zhuyin` 6。合計 **122**（帶 fixture 全串起來跑的數字）。
+另有 `tests/preview-table.html` 的 19 項瀏覽器內檢查，不在這個數字裡。
 
 一次跑完全部（`js/core/*.js` 串在一起不會撞名，已驗證）：
 
@@ -221,6 +248,15 @@ for t in tests/*.test.js; do printf "%-32s " "$t"; python3 tests/run.py js/core/
 - **計畫外追加：注音**（使用者要求）。資料來源與判讀方式見下方〈資料正確性
   的守護機制〉。UI 上詳細面板必顯示，格子則由「顯示注音」開關控制，
   狀態存在 `settings.showZhuyin`。
+- **Task 3.3 裁決**：週期表畫面的口訣區加「學這一族」按鈕。brief 沒要求，
+  但沒有它就只能手打 `#learn?group=1A`，手機上驗收很痛苦。
+- **Task 3.4 裁決**：`js/ui/quiz-runner.js` 提前到 3.4 建立（計畫排在 3.5）。
+  測驗與複習的作答體驗完全相同，先在 screen-quiz.js 寫一份再搬過去
+  等於白做。
+- **Task 3.5 裁決**：`question.js` 拆出 `questionForZ` 與 `scopeToUnlocked`。
+  複習畫面要「只從到期卡出題」——它自己決定考哪個 z，但限縮範圍與
+  換題型重試的規則必須與測驗完全一致。留在 `nextQuestion` 裡的話，
+  UI 層得自己重寫一份，兩邊遲早走鐘。
 - **Task 0.2 裁決**：`js/main.js` 的路由除了 brief 要求的 `#name` 形式，
   額外支援 `#name?key=value` 查詢參數解析（`navigate(name, params)` /
   `registerScreen(name, (container, params) => void)`）。這是 Task 3.3

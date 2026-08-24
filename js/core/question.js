@@ -217,15 +217,40 @@ export function nextQuestion(ctx, rng = Math.random) {
 
   const candidates = pools[source];
   const z = candidates[Math.floor(rng() * candidates.length)];
+  return questionForZ(z, ctx, rng);
+}
 
-  const availableSet = new Set(availableZ);
+/**
+ * 把 ctx.data 限縮到已解鎖範圍：元素與族代號都要限，否則氦的干擾項會抽到
+ * Og（118 號超重元素）、group-id 會出現學生還沒學到的族別。
+ * @param {object} ctx 同 nextQuestion 的 ctx
+ * @returns {{ elements: object[], groups: object[], stages: object[] }}
+ */
+export function scopeToUnlocked(ctx) {
+  const availableSet = new Set(availableElements(ctx.stages, ctx.unlockedStages));
   const groupRefs = unlockedGroupRefs(ctx.stages, ctx.unlockedStages);
-  const scopedData = {
+  return {
     elements: ctx.data.elements.filter(e => availableSet.has(e.z)),
     groups: ctx.data.groups.filter(g => groupRefs.has(g.group)),
     stages: ctx.data.stages
   };
+}
 
+/**
+ * 對指定的原子序出一題：限縮範圍後洗牌題型逐一嘗試，取第一個成功的。
+ *
+ * 從 nextQuestion 拆出來，是因為複習畫面要「只從到期卡出題」——它自己
+ * 決定考哪一個 z，但限縮範圍與換題型重試的規則必須完全一致。留在
+ * nextQuestion 裡面的話，UI 層就得自己重寫一份，兩邊遲早會走鐘。
+ *
+ * 所有題型都不適用時回傳 null（不會無限重試，最多 QUESTION_TYPES.length 次）。
+ * @param {number} z 原子序
+ * @param {object} ctx 同 nextQuestion 的 ctx
+ * @param {() => number} rng
+ * @returns {object | null}
+ */
+export function questionForZ(z, ctx, rng = Math.random) {
+  const scopedData = scopeToUnlocked(ctx);
   for (const type of shuffle(QUESTION_TYPES, rng)) {
     const q = makeQuestion(type, z, scopedData, rng);
     if (q) return q;

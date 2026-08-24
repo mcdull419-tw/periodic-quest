@@ -360,3 +360,62 @@
   background: var(--surface);
   font-size: var(--font-size-sm);
 }
+
+/* ---- 首頁（Task 3.5） -------------------------------------------------- */
+
+.today-line {
+  margin: 0 0 var(--gap-sm);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.stage-row {
+  margin-bottom: var(--gap);
+}
+
+.stage-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 鎖定的關卡整列變淡，一眼看得出還不能玩 */
+.stage-row.is-locked {
+  opacity: 0.55;
+}
+
+.stage-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gap-sm);
+  margin-bottom: 4px;
+  font-size: var(--font-size-sm);
+}
+
+.stage-count {
+  color: var(--text-dim);
+}
+
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.stage-lock {
+  margin: 4px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}
+
+/* 停用的主要按鈕（今天沒卡可複習時）要看得出是停用而非壞掉 */
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

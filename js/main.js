@@ -8,6 +8,8 @@
 import { renderTableScreen } from "./ui/screen-table.js";
 import { renderLearnScreen } from "./ui/screen-learn.js";
 import { renderQuizScreen } from "./ui/screen-quiz.js";
+import { renderReviewScreen } from "./ui/screen-review.js";
+import { renderHomeScreen } from "./ui/screen-home.js";
 
 const screens = {};
 const app = document.getElementById("app");
@@ -124,6 +126,8 @@ function registerServiceWorker() {
 registerScreen("table", renderTableScreen);
 registerScreen("learn", renderLearnScreen);
 registerScreen("quiz", renderQuizScreen);
+registerScreen("review", renderReviewScreen);
+registerScreen("home", renderHomeScreen);
 
 window.addEventListener("hashchange", render);
 init();
