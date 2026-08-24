@@ -220,6 +220,17 @@ check('重畫後保留水平捲動位置（點元素、切注音都不該彈回�
   return `捲到 ${Math.round(ratio * 100)}% 的位置，重畫後仍在原處`;
 });
 
+check('選取光環畫在格子內側（畫外側會在最左最右欄被裁掉）', () => {
+  // 這條看起來像在測實作細節，但它鎖的是一個真實回報過的 bug：
+  // 光環往外畫時，第 1 欄與第 18 欄超出捲動容器的部分會被裁掉。
+  // 「內縮」就是防止它復發的不變量。
+  renderPeriodicTable(host, elements, { highlightZ: [1, 2] });
+  const cell = host.querySelector('.pt-cell.is-selected');
+  const offset = getComputedStyle(cell).outlineOffset;
+  assert(parseFloat(offset) < 0, `outline-offset 是 ${offset}，必須為負值`);
+  return `outline-offset: ${offset}`;
+});
+
 check('預設不顯示注音', () => {
   renderPeriodicTable(host, elements, {});
   assert(host.querySelectorAll('.pt-zhuyin').length === 0, '預設就顯示了注音');

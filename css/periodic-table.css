@@ -137,11 +137,15 @@
   opacity: 0.3;
 }
 
-/* 目前選取的那一格。用外擴的光環而非變更邊框，才能和上面的
-   整族高亮疊在一起看（在 1A 篩選下點鈉時兩個 class 會同時出現）。 */
+/* 目前選取的那一格。用光環而非變更邊框，才能和上面的整族高亮疊在
+   一起看（在 1A 篩選下點鈉時兩個 class 會同時出現）。
+
+   outline-offset 必須是負的——光環要畫在格子內側。畫在外側的話，
+   第 1 欄（1A）與第 18 欄（8A）的光環會超出捲動容器的邊界被裁掉，
+   第 1 列與最後一列在上下方向也一樣。內縮就四個邊都安全。 */
 .pt-cell.is-selected {
   outline: 2px solid var(--accent-2);
-  outline-offset: 1px;
+  outline-offset: -3px;
   z-index: 1;
   font-weight: 700;
 }
