@@ -139,9 +139,12 @@ class 狀態），列出 PASS/FAIL，剩下顏色與美感才交給人眼。新�
 - Pages 網址：`https://mcdull419-tw.github.io/periodic-quest/`
 - `manifest.json` 的 `start_url` 與 `scope` 都是 `./`，`index.html`、
   `sw.js`、`js/data/load.js` 也全用相對路徑，所以部署在子目錄不必改。
-- `sw.js` 只在 localhost／私有網段走 network-first，github.io 走
-  cache-first，離線功能不受影響。**每次改動 CORE_ASSETS 都要同步把
-  CACHE_VERSION 往上加**，否則學生會卡在舊快取。
+- `sw.js` **一律走 network-first**（逾時 3 秒退回快取）。原本是 cache-first、
+  只在 localhost 例外，結果實際踩坑：部署上去後使用者的瀏覽器照樣顯示舊版，
+  因為 `css/components.css` 在預先快取清單裡，早就被凍住了。當時 PROGRESS
+  寫著「每次改 CORE_ASSETS 都要把 CACHE_VERSION 加一」——第一次就忘了。
+  **靠人記住的規則不算機制**，所以改成策略本身就不會過期。離線仍可用
+  （退回快取），代價只是連線時多一趟往返，整個 App 一百多 KB，划算。
 - 這台機器沒有 gh CLI、沒有 Homebrew、沒有 SSH 金鑰，`git push` 必須由
   使用者本人執行（HTTPS + PAT，憑證會存進 osxkeychain）。
 

@@ -9,7 +9,7 @@
 // （例如 pq-v1 -> pq-v2），舊快取會在新 Service Worker activate 時被清掉，
 // 學生就不會卡在舊版本、看到過期內容。
 
-const CACHE_VERSION = "pq-v3";
+const CACHE_VERSION = "pq-v4";
 
 // 開發期間會持續新增檔案（data/*.json、js/ui/*.js 等），這裡只預先快取
 // PWA 外殼本身一定需要的固定檔案；其餘檔案在第一次造訪時由 fetch 事件
@@ -49,21 +49,58 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// 開發時的例外：cache-first 會讓「改了檔案、重整卻還是舊的」變成常態，
-// 而 Phase 3 的驗收就是靠反覆重整看畫面。在本機與區網位址改用
-// network-first（拿不到才回頭找快取），正式網域維持 cache-first——
-// 離線可用是這個 App 的重點功能之一，不能為了開發方便犧牲。
-const DEV_HOST = /^(localhost|127\.0\.0\.1|\[?::1\]?|0\.0\.0\.0|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/;
-const IS_DEV = DEV_HOST.test(self.location.hostname);
+// 取用策略：network-first，拿不到才回頭找快取。
+//
+// 原本是 cache-first，結果踩了一次實際的坑：改完程式部署上去，使用者的
+// 瀏覽器照樣顯示舊版，因為檔案早就被凍在快取裡，除非 CACHE_VERSION 變動
+// 才會更新。而「每次改檔都記得把版本號加一」這種要靠人記住的規則，
+// 遲早會忘——事實上第一次就忘了。
+//
+// 改成 network-first 之後，只要連得上網就一定是最新版；離線時退回快取，
+// 「加入主畫面後離線也能用」這個目標不受影響。代價是連線時多一趟往返，
+// 但整個 App 只有一百多 KB，這個代價換掉一整類 bug 很划算。
+//
+// 網路「很慢」和「斷線」不一樣：completely offline 會馬上 reject，
+// 但訊號差的時候 fetch 可能吊著好幾十秒，畫面就一直空白。所以加上
+// 逾時，超過就直接用快取——寧可給舊內容也不要讓學生盯著白畫面。
+const NETWORK_TIMEOUT_MS = 3000;
+
+function fromNetwork(request) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), NETWORK_TIMEOUT_MS);
+    fetch(request).then(
+      (response) => { clearTimeout(timer); resolve(response); },
+      (err) => { clearTimeout(timer); reject(err); }
+    );
+  });
+}
 
 self.addEventListener("fetch", (event) => {
   // 只處理 GET；只處理同源請求（本專案不連任何外部資源，見專案規範）。
   if (event.request.method !== "GET") return;
   if (new URL(event.request.url).origin !== self.location.origin) return;
 
-  if (IS_DEV) {
-    event.respondWith(
-      fetch(event.request).catch(() =>
+  event.respondWith(
+    fromNetwork(event.request)
+      .then((response) => {
+        // 只快取成功的回應，避免把 404 或錯誤內容存進去。
+        //
+        // 這段快取寫入必須用 event.waitUntil() 保護存活期。
+        // event.respondWith() 只會把 SW 的存活期延到「它收到的 Promise
+        // settle 為止」；下面的 return response 一執行，respondWith 就
+        // settle 了。若這裡的 caches.open().then(...) 沒有另外交給
+        // waitUntil()，規範上瀏覽器隨時可能在寫入完成前就把 SW 終止，
+        // 導致這次快取「射後不理」失敗——症狀是學生線上瀏覽過某個畫面，
+        // 離線後卻打不開，而且難以重現。
+        if (response && response.ok) {
+          const clone = response.clone();
+          event.waitUntil(
+            caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, clone))
+          );
+        }
+        return response;
+      })
+      .catch(() =>
         caches.match(event.request).then(
           (cached) =>
             cached ||
@@ -74,43 +111,5 @@ self.addEventListener("fetch", (event) => {
             })
         )
       )
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request)
-        .then((response) => {
-          // 只快取成功的回應，避免把 404 或錯誤內容存進去。
-          //
-          // 注意：這段快取寫入必須用 event.waitUntil() 保護存活期。
-          // event.respondWith() 只會把 SW 的存活期延到「它收到的 Promise
-          // settle 為止」；下面的 return response 一執行，respondWith 就
-          // settle 了。若這裡的 caches.open().then(...) 沒有另外交給
-          // waitUntil()，規範上瀏覽器隨時可能在寫入完成前就把 SW 終止，
-          // 導致這次動態快取「射後不理」失敗——症狀是學生線上瀏覽過某個
-          // 畫面，離線後卻打不開，而且難以重現。
-          if (response && response.ok) {
-            const clone = response.clone();
-            event.waitUntil(
-              caches
-                .open(CACHE_VERSION)
-                .then((cache) => cache.put(event.request, clone))
-            );
-          }
-          return response;
-        })
-        .catch(
-          () =>
-            new Response("離線中，且尚未快取此資源。", {
-              status: 503,
-              statusText: "Offline",
-              headers: { "Content-Type": "text/plain; charset=utf-8" },
-            })
-        );
-    })
   );
 });
