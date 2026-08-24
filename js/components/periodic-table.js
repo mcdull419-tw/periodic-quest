@@ -94,11 +94,14 @@ function createPlaceholder(label, row) {
  * @param {'browse' | 'locate'} [options.mode] locate 模式下格子不顯示符號與中文名
  * @param {boolean} [options.showZhuyin] 中文名旁是否附注音。開啟時格子會加寬加高，
  *   整張表變寬、要多捲一點——所以預設關閉，由畫面上的開關決定。
+ * @param {boolean} [options.revealGroup] 若 highlightGroup 那一欄不在可視範圍內，
+ *   自動捲過去。只有「使用者剛剛換了族」時才該傳 true——每次重畫都捲會把
+ *   使用者自己捲到的位置搶走。
  * @returns {void}
  */
 export function renderPeriodicTable(container, elements, options = {}) {
   const { onSelect, highlightGroup = null, highlightZ = [], mode = 'browse',
-          showZhuyin = false } = options;
+          showZhuyin = false, revealGroup = false } = options;
   const highlightSet = new Set(highlightZ);
 
   // 改高亮、切注音、點選元素都會走到這裡重畫整張表，捲動容器一起被
@@ -203,6 +206,31 @@ export function renderPeriodicTable(container, elements, options = {}) {
     const range = scroller.scrollWidth - scroller.clientWidth;
     if (range > 0) scroller.scrollLeft = Math.round(scrollRatio * range);
   }
+
+  // 剛換族時，若那一欄不在畫面裡就捲過去。順序在還原之後：位置預設
+  // 沿用使用者捲到的地方，只有這一種情況才覆寫。
+  if (revealGroup && highlightGroup !== null) {
+    revealColumn(scroller, grid.querySelector(`.pt-cell[data-main-group="${highlightGroup}"]`));
+  }
+}
+
+/**
+ * 若目標格子不在捲動容器的可視範圍內，把它捲到中間。
+ * 已經看得到就完全不動——使用者自己捲到的位置沒有理由被搶走。
+ * 用 getBoundingClientRect 而非 offsetLeft：offsetLeft 是相對於
+ * offsetParent，而捲動容器沒有設定 position，offsetParent 會一路
+ * 往上找到 body，算出來的值跟容器內的位置對不起來。
+ * @param {HTMLElement} scroller
+ * @param {HTMLElement | null} cell
+ */
+function revealColumn(scroller, cell) {
+  if (!cell) return;
+  const box = scroller.getBoundingClientRect();
+  const target = cell.getBoundingClientRect();
+  if (target.left >= box.left && target.right <= box.right) return;
+  const centered = scroller.scrollLeft + (target.left - box.left)
+    - (box.width - target.width) / 2;
+  scroller.scrollLeft = Math.max(0, Math.round(centered));
 }
 
 export { MAIN_COLUMNS };

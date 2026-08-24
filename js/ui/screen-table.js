@@ -166,6 +166,10 @@ export function renderTableScreen(container, params) {
     let state = loadState(localStorage);
     let selectedGroup = GROUP_CODES.indexOf(params.group) >= 0 ? params.group : null;
     let selectedZ = null;
+    // 只有「使用者剛換族」才自動捲動。點元素、切注音造成的重畫不該搶走
+    // 使用者自己捲到的位置。帶 ?group= 進來時第一次也要捲，否則從教學
+    // 畫面回來會看不到那一族在哪。
+    let revealGroup = selectedGroup !== null;
     // 存進 settings 而不是只留在記憶體：學生每次進週期表都要重按一次開關
     // 會很煩。settings 原本就沒有這個欄位，undefined 代表關閉，
     // 因此不需要為它寫 schema migration。
@@ -188,11 +192,10 @@ export function renderTableScreen(container, params) {
     chantSlot.className = 'chant-slot';
 
     const toggleRow = document.createElement('div');
-    toggleRow.className = 'group-filters';
+    toggleRow.className = 'toggle-row';
     const zhuyinToggle = document.createElement('button');
     zhuyinToggle.type = 'button';
-    zhuyinToggle.className = 'chip';
-    zhuyinToggle.textContent = '顯示注音';
+    zhuyinToggle.className = 'chip chip-toggle';
     zhuyinToggle.onclick = () => setShowZhuyin(!showZhuyin);
     toggleRow.appendChild(zhuyinToggle);
 
@@ -201,6 +204,10 @@ export function renderTableScreen(container, params) {
 
     function drawFilters() {
       filters.innerHTML = '';
+      const label = document.createElement('span');
+      label.className = 'filter-label';
+      label.textContent = '族';
+      filters.appendChild(label);
       [{ code: null, label: '全部' }, ...GROUP_CODES.map(c => ({ code: c, label: c }))]
         .forEach(({ code, label }) => {
           const btn = document.createElement('button');
@@ -209,7 +216,7 @@ export function renderTableScreen(container, params) {
           btn.textContent = label;
           if (code === selectedGroup) btn.setAttribute('aria-pressed', 'true');
           else btn.setAttribute('aria-pressed', 'false');
-          btn.onclick = () => { selectedGroup = code; draw(); };
+          btn.onclick = () => { selectedGroup = code; revealGroup = true; draw(); };
           filters.appendChild(btn);
         });
     }
@@ -251,12 +258,15 @@ export function renderTableScreen(container, params) {
       drawFilters();
       drawChant();
       zhuyinToggle.setAttribute('aria-pressed', showZhuyin ? 'true' : 'false');
+      zhuyinToggle.textContent = (showZhuyin ? '☑' : '☐') + ' 顯示注音';
       renderPeriodicTable(tableHost, elements, {
         highlightGroup: selectedGroup,
         highlightZ: selectedZ === null ? [] : [selectedZ],
         showZhuyin,
+        revealGroup,
         onSelect: el => { selectedZ = el.z; draw(); }
       });
+      revealGroup = false;
       drawDetail();
     }
 

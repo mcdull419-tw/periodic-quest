@@ -25,8 +25,27 @@
 .group-filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--gap-sm);
   margin-bottom: var(--gap-sm);
+}
+
+/* 那一排籤在做什麼要講清楚，不然九顆圓鈕看不出是族別篩選 */
+.filter-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
+}
+
+/* 注音開關與族籤長得一樣的話，會被當成第十個族。
+   拉開距離、改用方框而非圓角，並自帶 ☐／☑ 表達開關狀態。 */
+.toggle-row {
+  display: flex;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-sm);
+}
+
+.chip-toggle {
+  border-radius: var(--radius-sm);
 }
 
 .chip {
@@ -41,11 +60,14 @@
   cursor: pointer;
 }
 
+/* 選中的族：實心底色 + 白字 + 內縮的白色細環。只換底色在深色模式下
+   對比不夠明顯，加一圈環之後不管什麼配色都看得出是「按下去」的那顆。 */
 .chip[aria-pressed="true"] {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
   font-weight: 700;
+  box-shadow: inset 0 0 0 2px var(--surface);
 }
 
 .chip:focus-visible {

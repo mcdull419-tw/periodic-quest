@@ -220,6 +220,30 @@ check('重畫後保留水平捲動位置（點元素、切注音都不該彈回�
   return `捲到 ${Math.round(ratio * 100)}% 的位置，重畫後仍在原處`;
 });
 
+check('revealGroup：選到畫面外的族會自動捲過去，已經看得到就不動', () => {
+  renderPeriodicTable(host, elements, {});
+  const box = host.querySelector('.pt-scroll');
+  const range = box.scrollWidth - box.clientWidth;
+  assert(range > 0, '表格沒有溢出，這條測不到（把視窗縮窄再重整）');
+
+  // 捲到最左邊，此時 8A（第 18 欄）一定在畫面外
+  box.scrollLeft = 0;
+  renderPeriodicTable(host, elements, { highlightGroup: '8A', revealGroup: true });
+  const afterFar = host.querySelector('.pt-scroll');
+  assert(afterFar.scrollLeft > 0, '選了畫面外的 8A 卻沒有捲過去');
+  const he = afterFar.querySelector('.pt-cell[data-main-group="8A"]').getBoundingClientRect();
+  const view = afterFar.getBoundingClientRect();
+  assert(he.left >= view.left - 1 && he.right <= view.right + 1, '捲完 8A 仍不在可視範圍內');
+
+  // 已經看得到的族不該把位置搶走
+  const held = afterFar.scrollLeft;
+  renderPeriodicTable(host, elements, { highlightGroup: '8A', revealGroup: true });
+  const again = host.querySelector('.pt-scroll');
+  assert(Math.abs(again.scrollLeft - held) <= 1,
+         `已經看得到卻又捲動了：${held} → ${again.scrollLeft}`);
+  return `8A 捲到 ${Math.round(held)}px`;
+});
+
 check('選取光環畫在格子內側（畫外側會在最左最右欄被裁掉）', () => {
   // 這條看起來像在測實作細節，但它鎖的是一個真實回報過的 bug：
   // 光環往外畫時，第 1 欄與第 18 欄超出捲動容器的部分會被裁掉。
