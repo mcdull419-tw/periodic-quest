@@ -101,6 +101,20 @@ export function renderPeriodicTable(container, elements, options = {}) {
           showZhuyin = false } = options;
   const highlightSet = new Set(highlightZ);
 
+  // 改高亮、切注音、點選元素都會走到這裡重畫整張表，捲動容器一起被
+  // 重建，水平捲動位置就會歸零——使用者好不容易捲到 8A，點一個元素
+  // 又被彈回最左邊。這裡先記住捲到哪，重建後再放回去。
+  //
+  // 記的是「比例」而不是像素：開啟注音會讓格子變寬、整張表變長，
+  // 記像素會落在不同的欄位上。內容寬度沒變時，比例還原出來的像素值
+  // 與原本完全相同，所以兩種情況用同一套邏輯就夠。
+  const previous = container.querySelector('.pt-scroll');
+  let scrollRatio = null;
+  if (previous) {
+    const range = previous.scrollWidth - previous.clientWidth;
+    if (range > 0) scrollRatio = previous.scrollLeft / range;
+  }
+
   container.innerHTML = '';
 
   // 捲動只發生在這一層。頁面本身不得出現水平捲動——18 欄 × 最小 44px
@@ -182,6 +196,13 @@ export function renderPeriodicTable(container, elements, options = {}) {
 
   scroller.appendChild(grid);
   container.appendChild(scroller);
+
+  // 放回捲動位置。必須在 grid 進入 DOM 之後才做，否則 scrollWidth
+  // 還是 0，算出來的位置一律是 0。
+  if (scrollRatio !== null) {
+    const range = scroller.scrollWidth - scroller.clientWidth;
+    if (range > 0) scroller.scrollLeft = Math.round(scrollRatio * range);
+  }
 }
 
 export { MAIN_COLUMNS };

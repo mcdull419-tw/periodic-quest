@@ -196,6 +196,30 @@ check('locate 模式不顯示符號與中文名', () => {
   assert(host.querySelectorAll('.pt-z').length === 118, '原子序沒有全部顯示');
 });
 
+check('重畫後保留水平捲動位置（點元素、切注音都不該彈回最左邊）', () => {
+  renderPeriodicTable(host, elements, {});
+  const before = host.querySelector('.pt-scroll');
+  const range = before.scrollWidth - before.clientWidth;
+  assert(range > 0, '表格沒有溢出，這條測不到（把視窗縮窄再重整）');
+  before.scrollLeft = Math.round(range * 0.8);
+  const target = before.scrollLeft;
+
+  // 模擬「點了一個元素」造成的重畫
+  renderPeriodicTable(host, elements, { highlightZ: [11] });
+  const after = host.querySelector('.pt-scroll');
+  assert(Math.abs(after.scrollLeft - target) <= 1,
+         `重畫後捲到 ${after.scrollLeft}，原本在 ${target}`);
+
+  // 切注音會改變內容寬度，這時要保留的是比例而不是像素
+  const ratio = after.scrollLeft / (after.scrollWidth - after.clientWidth);
+  renderPeriodicTable(host, elements, { showZhuyin: true });
+  const wide = host.querySelector('.pt-scroll');
+  const newRatio = wide.scrollLeft / (wide.scrollWidth - wide.clientWidth);
+  assert(Math.abs(newRatio - ratio) < 0.02,
+         `切注音後比例從 ${ratio.toFixed(3)} 變成 ${newRatio.toFixed(3)}`);
+  return `捲到 ${Math.round(ratio * 100)}% 的位置，重畫後仍在原處`;
+});
+
 check('預設不顯示注音', () => {
   renderPeriodicTable(host, elements, {});
   assert(host.querySelectorAll('.pt-zhuyin').length === 0, '預設就顯示了注音');
