@@ -8,6 +8,7 @@ import { loadState, saveState } from '../core/store.js';
 import { summarize, computeUnlockedStages } from '../core/progress.js';
 import { dueCards } from '../core/scheduler.js';
 import { navigate } from '../main.js';
+import { BUILD } from '../version.js';
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -144,6 +145,10 @@ export function renderHomeScreen(container) {
       stagesBox.appendChild(renderStageRow(stage, i > 0 ? s.byStage[i - 1] : null));
     });
     container.appendChild(stagesBox);
+
+    // 版本標示。看起來多餘，但「我現在看到的是哪一版」在快取出問題時
+    // 是最先要回答的問題，而畫面上看不出來的話只能靠猜。
+    container.appendChild(el('p', 'muted build-mark', `版本 ${BUILD}`));
   }).catch(err => {
     container.appendChild(el('p', 'muted error', '資料載入失敗：' + err.message));
   });

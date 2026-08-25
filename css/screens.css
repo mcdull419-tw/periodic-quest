@@ -496,3 +496,10 @@
     filter: brightness(0.82);
   }
 }
+
+.build-mark {
+  margin-top: var(--gap-lg);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  opacity: 0.7;
+}
