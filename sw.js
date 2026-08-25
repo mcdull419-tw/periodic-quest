@@ -9,21 +9,55 @@
 // （例如 pq-v1 -> pq-v2），舊快取會在新 Service Worker activate 時被清掉，
 // 學生就不會卡在舊版本、看到過期內容。
 
-const CACHE_VERSION = "pq-v5";
+const CACHE_VERSION = "pq-v6";
 
-// 開發期間會持續新增檔案（data/*.json、js/ui/*.js 等），這裡只預先快取
-// PWA 外殼本身一定需要的固定檔案；其餘檔案在第一次造訪時由 fetch 事件
-// 動態存入同一份快取，之後就會被 cache-first 命中。
+// 離線可用是這個 App 的重點功能之一（學生在通勤、在沒訊號的地方也要能背），
+// 所以**執行期會用到的檔案全部預先快取**，不是只存外殼。
+//
+// 原本只快取外殼，其餘等「線上造訪過」再動態存入。實測踩到：飛航模式下
+// 進教學畫面，場景插圖出不來——因為那張圖從沒在線上被載入過。同樣的道理，
+// 元素資料與各畫面只要沒在線上開過，離線就全都打不開，等於「離線可用」
+// 只對走過一模一樣路徑的人成立。
+//
+// 注意：cache.addAll() 只要有任何一個 URL 失敗，install 就整個失敗，
+// 結果是完全沒有離線能力。所以這份清單新增檔案時必須確認路徑正確，
+// 並且**每次改動這份清單都要把 CACHE_VERSION 往上加**。
+// js/core/validate.js 不在清單裡：那是測試用的，App 執行期不會匯入。
 const CORE_ASSETS = [
   "./",
   "index.html",
   "manifest.json",
+
   "css/tokens.css",
   "css/components.css",
   "css/periodic-table.css",
   "css/screens.css",
+
   "js/main.js",
+  "js/version.js",
+  "js/data/load.js",
+  "js/core/store.js",
+  "js/core/scheduler.js",
+  "js/core/quiz.js",
+  "js/core/question.js",
+  "js/core/progress.js",
+  "js/components/periodic-table.js",
+  "js/components/zhuyin.js",
+  "js/components/scene-art.js",
+  "js/ui/screen-home.js",
+  "js/ui/screen-table.js",
+  "js/ui/screen-learn.js",
+  "js/ui/screen-quiz.js",
+  "js/ui/screen-review.js",
+  "js/ui/quiz-runner.js",
+
+  "data/elements.json",
+  "data/mnemonics-groups.json",
+  "data/mnemonics-elements.json",
+  "data/stages.json",
+
   "assets/icon.svg",
+  "assets/chant-scenes.jpg",
 ];
 
 self.addEventListener("install", (event) => {

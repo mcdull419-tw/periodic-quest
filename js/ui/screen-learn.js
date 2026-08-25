@@ -83,6 +83,21 @@ export function renderLearnScreen(container, params) {
       return head;
     }
 
+    /**
+     * 「接著學下一族」按鈕。教學最後一步與小測結果頁共用。
+     * @param {object} nextDef 下一族的定義
+     * @param {string} className
+     * @returns {HTMLButtonElement}
+     */
+    function goNextButton(nextDef, className) {
+      const btn = el('button', className, `接著學 ${nextDef.name} ${nextDef.group}`);
+      btn.type = 'button';
+      // navigate 會改變 hash 觸發重新渲染，畫面狀態全部重來，
+      // 不會殘留上一族的進度。
+      btn.onclick = () => navigate('learn', { group: nextDef.group });
+      return btn;
+    }
+
     // ---- 教學階段 -------------------------------------------------------
 
     function drawTeach() {
@@ -165,8 +180,13 @@ export function renderLearnScreen(container, params) {
             art.classList.add('is-next');
             box.appendChild(art);
           }
-          box.appendChild(el('p', 'scene scene-next',
+          const text = el('div');
+          text.appendChild(el('p', 'scene scene-next',
             `接下來（${nextDef.name} ${nextDef.group}）：${nextDef.scene}`));
+          // 場景是一條串起來的故事線，看完提示卻沒有路可走等於把學生
+          // 丟在原地。給一顆按鈕直接接下去。
+          text.appendChild(goNextButton(nextDef, 'btn btn-inline'));
+          box.appendChild(text);
           body.appendChild(box);
         }
       }
@@ -251,11 +271,15 @@ export function renderLearnScreen(container, params) {
       reread.type = 'button';
       reread.onclick = () => { quizIndex = -1; step = 0; drawTeach(); };
 
-      const toTable = el('button', 'btn btn-primary', '回週期表');
+      const toTable = el('button', 'btn', '回週期表');
       toTable.type = 'button';
       toTable.onclick = () => navigate('table', { group: def.group });
 
       nav.append(again, reread, toTable);
+
+      // 一族學完的自然去向是下一族，所以這顆放主要樣式。
+      const nextDef = def.sceneNext ? groups.find(g => g.group === def.sceneNext) : null;
+      if (nextDef) nav.appendChild(goNextButton(nextDef, 'btn btn-primary'));
       body.appendChild(nav);
     }
 
